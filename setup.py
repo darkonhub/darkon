@@ -13,7 +13,7 @@ setup(
     version=version,
     description='hack your deep learning performance ',
     long_description=pypandoc.convert('README.md', 'rst'),
-    author='Neosapience Inc.',
+    author='Neosapience, Inc.',
     url=github_url,
     download_url='{}/tarball/{}'.format(github_url, version),
     keywords=['AI', 'ML', 'DL', 'deep learning', 'machine learning', 'debugging',
