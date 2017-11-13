@@ -21,7 +21,6 @@ setup(
     license='Apache License 2.0',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
-        'Framework :: Tensorflow',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: Apache Software License',
