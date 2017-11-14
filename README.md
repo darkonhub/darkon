@@ -1,20 +1,26 @@
-**Darkon: Performance hacking for your AI model**
+**Darkon: Performance hacking for your deep learning models**
 
-**Darkon** is an open source software library for improving and debugging deep learning models. People think that deep neural network is a black-box that requires only large dataset and expect learning algorithms returns well-performing models. However, trained models often fail in real world usages, and it is difficult to fix such failure due to the black-box nature of deep neural networks.
+**Darkon** is an open source toolkit for improving and debugging deep learning models.
+People think that deep neural network is a black-box that requires only large dataset and expect learning algorithms returns well-performing models. 
+However, trained models often fail in real world usages, and it is difficult to fix such failure due to the black-box nature of deep neural networks.
+We are developing **Darkon** to ease effort to improve performance of deep learning models. 
 
-**Darkon** will gradually provide performance hacking features easily applicable to your existing projects based on following technologies.
-- Dataset inspection/filtering
+In this first release, we provide influence score calculation easily applicable to existing Tensorflow models (other models to be supported later)
+Influence score can be used for filtering bad training samples that affects test performance negatively. 
+It can be used for prioritize potential mislabeled examples to be fixed, and debugging distribution mismatch between train and test samples.
+
+**Darkon** will gradually provide performance hacking methods easily applicable to existing projects based on following technologies.
+- Dataset inspection/filtering/management
 - Continual learning
 - Meta/transfer learning
+- Interpretable ML
 - Hyper parameter optimization
 - Network architecture search
 
-In this first release, we provide influence function calculation feature easily applicable to any Tensorflow models. Influence score can be used for filtering bad training samples that affects test performance negatively. It can be used for prioritize potential mislabeled examples to be annotated, and debugging distribution mismatch between train and test samples.
-
-More features will be released soon. Please keep your eyes on **Darkon**
+More features will be released soon. Feedback and feature request are always welcome, which help us to manage priorities. Please keep your eyes on **Darkon**. 
 
 ## Dependencies
-- [Tensorflow>=1.3.0](https://github.com/tensorflow/tensorflow)
+- [Tensorflow](https://github.com/tensorflow/tensorflow)>=1.3.0
 
 ## Installation
 ```bash
@@ -36,7 +42,7 @@ pip install darkon
 [Neosapience Inc.](http://www.neosapience.com)
 
 ## License
-**Apache License v2.0**
+**Apache License 2.0**
 
 ## References
-[1] Pang Wei Koh and Percy Liang "[Understanding Black-box Predictions via Influence Functions](https://arxiv.org/abs/1703.04730)" ICML2017]
+[1] Pang Wei Koh and Percy Liang "[Understanding Black-box Predictions via Influence Functions](https://arxiv.org/abs/1703.04730)" ICML2017

@@ -30,11 +30,11 @@ class InfluenceFeeder:
 
     @abc.abstractmethod
     def train_batch(self, batch_size):
-        """ train_batch
+        """ training data feeder by batch sampling
 
         Parameters
         ----------
-        batch_size :
+        batch_size : batch size
 
         Returns
         -------
@@ -45,26 +45,26 @@ class InfluenceFeeder:
 
     @abc.abstractmethod
     def train_one(self, index):
-        """ train_one
+        """ single training data feeder
 
         Parameters
         ----------
-        index :
+        index : training sample index
 
         Returns
         -------
         x : feed one input value
-        y : feed one label values
+        y : feed one label value
         """
         pass
 
     @abc.abstractmethod
     def test_indices(self, indices):
-        """ test_indices
+        """ test data feeder
 
         Parameters
         ----------
-        indices :
+        indices : testing sample index
 
         Returns
         -------
