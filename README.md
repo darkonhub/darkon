@@ -29,6 +29,8 @@ It can be used for prioritize potential mislabeled examples to be fixed, and deb
 More features will be released soon. Feedback and feature request are always welcome, which help us to manage priorities. Please keep your eyes on **Darkon**. 
 
 ## Dependencies
+
+[![Join the chat at https://gitter.im/darkonhub/darkon](https://badges.gitter.im/darkonhub/darkon.svg)](https://gitter.im/darkonhub/darkon?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 - [Tensorflow](https://github.com/tensorflow/tensorflow)>=1.3.0
 
 ## Installation
