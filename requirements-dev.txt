@@ -3,5 +3,4 @@ tox
 pypandoc
 codecov
 tox-travis
-pytest-cov
 flake8
