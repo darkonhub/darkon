@@ -2,7 +2,8 @@
 [![codecov](https://codecov.io/gh/darkonhub/darkon/branch/master/graph/badge.svg)](https://codecov.io/gh/darkonhub/darkon)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![PyPI](https://img.shields.io/pypi/v/darkon.svg?style=flat-square)]()
-[![Gitter](https://img.shields.io/gitter/room/darkonhub/darkon.svg?style=flat-square)]()
+[![Gitter](https://badges.gitter.im/darkonhub/darkon.svg)](https://gitter.im/darkonhub/darkon?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/077f07f7a52b4d8186beee724ed19231)](https://www.codacy.com/app/zironycho/darkon?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=darkonhub/darkon&amp;utm_campaign=Badge_Grade)
 
 ---------------------------------------------------
 
