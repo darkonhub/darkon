@@ -3,14 +3,13 @@ language: python
 python:
     - "2.7"
     - "3.6"
-    - "flake8"
+    - "pypy"
 
 before_install:
 - sudo apt-get update -qq
 - sudo apt-get install -qq pandoc
 
-install:
-- pip install -r requirements-dev.txt
+install: pip install tox-travis
 
 script:
 - tox
