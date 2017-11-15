@@ -10,5 +10,6 @@ before_install:
 
 install:
 - pip install -r requirements-dev.txt
-- pip install tox-travis
-script: tox
+script:
+- tox
+- codecov
