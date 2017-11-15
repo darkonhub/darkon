@@ -94,7 +94,7 @@ class Influence:
             'scale': 1e4,
             'damping': 0.01,
             'num_repeats': 1,
-            'recursion_batch_size': 64,
+            'recursion_batch_size': 10,
             'recursion_depth': 10000
         }
 
@@ -112,8 +112,8 @@ class Influence:
     def _path(self, *paths):
         return os.path.join(self.workspace, *paths)
 
-    @timing
-    def prepare(self, sess, test_indices, test_batch_size=64, approx_params=None, force_refresh=False):
+    # @timing
+    def _prepare(self, sess, test_indices, test_batch_size, approx_params=None, force_refresh=False):
         """ Calculate inverse hessian vector product, and save it in workspace
 
         Parameters
@@ -122,30 +122,36 @@ class Influence:
             Tensorflow session
         test_indices: list
             Test samples to be used. Influence on these samples are calculated.
+        test_batch_size: int
+            batch size for test samples
         approx_params: dict
             Parameters for inverse hessian vector product approximation
         force_refresh: bool
             If False, it calculates only when test samples and parameters are changed.
             Default: False
-        test_batch_size: int
-            batch size for test samples
 
         """
-        self.feeder.reset()
-        test_grad_loss = self._get_test_grad_loss(sess, test_indices, test_batch_size)
-        print('Norm of test gradient: %s' % np.linalg.norm(np.concatenate([a.reshape(-1) for a in test_grad_loss])))
-
         # update ihvp approx params
-        for param_key in approx_params.keys():
-            if param_key not in self.ihvp_config:
-                raise RuntimeError('unknown ihvp config param is approx_params')
-        self.ihvp_config.update(approx_params)
-        inv_hvp_path = self._path(self._approx_filename(sess, test_indices))
+        if approx_params is not None:
+            for param_key in approx_params.keys():
+                if param_key not in self.ihvp_config:
+                    raise RuntimeError('unknown ihvp config param is approx_params')
+            self.ihvp_config.update(approx_params)
 
-        self._load_inverse_hvp(sess, force_refresh, test_grad_loss, inv_hvp_path)
+        inv_hvp_path = self._path(self._approx_filename(sess, test_indices))
+        if not os.path.exists(inv_hvp_path) or force_refresh:
+            self.feeder.reset()
+            test_grad_loss = self._get_test_grad_loss(sess, test_indices, test_batch_size)
+            print('Norm of test gradient: %s' % np.linalg.norm(np.concatenate([a.reshape(-1) for a in test_grad_loss])))
+            self.inverse_hvp = self._get_inverse_hvp_lissa(sess, test_grad_loss)
+            np.savez(inv_hvp_path, inverse_hvp=self.inverse_hvp)
+            print('Saved inverse HVP to %s' % inv_hvp_path)
+        else:
+            self.inverse_hvp = np.load(inv_hvp_path)['inverse_hvp']
+            print('Loaded inverse HVP from %s' % inv_hvp_path)
 
     @timing
-    def upweighting_influence(self, sess, train_indices, num_total_train_example):
+    def upweighting_influence(self, sess, train_indices, num_total_train_example, force_refresh=False, **kwargs):
         """ Calculate influence score of given training samples
          Negative value indicates bad effect on the test loss with test samples in prepare()
          prepare() should be called beforehand
@@ -155,22 +161,27 @@ class Influence:
         sess: tf.Session
             Tensorflow session
         train_indices: list
-            Training samples indices to be calculcated.
+            Training samples indices to be calculated.
         num_total_train_example: int
             Number of total training samples used for training
+        force_refresh: bool
+            If False, it calculates only when test samples and parameters are changed.
+            Default: False
 
         Returns
         -------
         array : np.ndarray
 
         """
+        self._prepare(sess, force_refresh=force_refresh, **kwargs)
+
         self.feeder.reset()
         predicted_loss_diffs = self._grad_diffs(sess, train_indices, num_total_train_example)
         print('Multiplying by %s train examples' % predicted_loss_diffs.size)
         return predicted_loss_diffs
 
     @timing
-    def upweighting_influence_batch(self, sess, train_batch_size, num_iters, num_subsampling=-1):
+    def upweighting_influence_batch(self, sess, train_batch_size, num_iters, num_subsampling=-1, force_refresh=False, **kwargs):
         """ Iteratively calculate influence scores for training samples
         Negative value indicates bad effect on the test loss with test samples in prepare()
         prepare() should be called beforehand
@@ -194,8 +205,7 @@ class Influence:
         array : np.ndarray
 
         """
-        if self.inverse_hvp is None:
-            raise RuntimeError('You must call prepare() before')
+        self._prepare(sess, force_refresh=force_refresh, **kwargs)
 
         self.feeder.reset()
         predicted_loss_diffs = self._grad_diffs_all(sess, train_batch_size, num_iters, num_subsampling)
@@ -225,15 +235,6 @@ class Influence:
         else:
             raise RuntimeError('unsupported yet')
         return test_grad_loss
-
-    def _load_inverse_hvp(self, sess, force_refresh, test_grad_loss, inv_hvp_path):
-        if os.path.exists(inv_hvp_path) and not force_refresh:
-            self.inverse_hvp = list(np.load(inv_hvp_path)['inverse_hvp'])
-            print('Loaded inverse HVP from %s' % inv_hvp_path)
-        else:
-            self.inverse_hvp = self._get_inverse_hvp_lissa(sess, test_grad_loss)
-            np.savez(inv_hvp_path, inverse_hvp=self.inverse_hvp)
-            print('Saved inverse HVP to %s' % inv_hvp_path)
 
     def _approx_filename(self, sess, test_indices):
         sha = hashlib.sha1()
