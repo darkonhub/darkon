@@ -18,7 +18,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from tensorflow.python.ops.gradients_impl import _hessian_vector_product
-from .feeder import InfluenceFeeder
+from .feeder import InfluenceFeeder  # noqa: ignore=F401
 
 import numpy as np
 import tensorflow as tf
@@ -182,7 +182,7 @@ class Influence:
         array : np.ndarray
 
         """
-        if self.inverse_hvp == None:
+        if self.inverse_hvp is None:
             raise RuntimeError('You must call prepare() before')
 
         self.feeder.reset()

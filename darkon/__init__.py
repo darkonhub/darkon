@@ -12,5 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from .influence.influence import Influence
-from .influence.influence import InfluenceFeeder
+from .influence.influence import Influence  # noqa: ignore=F401
+from .influence.influence import InfluenceFeeder  # noqa: ignore=F401
+
+__all__ = ["influence"]

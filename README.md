@@ -1,5 +1,8 @@
 [![Build Status](https://travis-ci.org/darkonhub/darkon.svg?branch=master)](https://travis-ci.org/darkonhub/darkon)
 [![codecov](https://codecov.io/gh/darkonhub/darkon/branch/master/graph/badge.svg)](https://codecov.io/gh/darkonhub/darkon)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![PyPI](https://img.shields.io/pypi/v/darkon.svg?style=flat-square)]()
+[![Gitter](https://img.shields.io/gitter/room/darkonhub/darkon.svg?style=flat-square)]()
 
 ---------------------------------------------------
 
@@ -38,7 +41,7 @@ pip install darkon
 - Email: [darkon@neosapience.com](mailto:darkon@neosapience.com) 
 
 ## Authors
-[Neosapience Inc.](http://www.neosapience.com)
+[Neosapience, Inc.](http://www.neosapience.com)
 
 ## License
 **Apache License v2.0**
