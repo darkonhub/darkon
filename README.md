@@ -29,6 +29,9 @@ It can be used for prioritize potential mislabeled examples to be fixed, and deb
 More features will be released soon. Feedback and feature request are always welcome, which help us to manage priorities. Please keep your eyes on **Darkon**. 
 
 ## Dependencies
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/077f07f7a52b4d8186beee724ed19231)](https://www.codacy.com/app/zironycho/darkon?utm_source=github.com&utm_medium=referral&utm_content=darkonhub/darkon&utm_campaign=badger)
+
 - [Tensorflow](https://github.com/tensorflow/tensorflow)>=1.3.0
 
 ## Installation
