@@ -1,0 +1,10 @@
+[run]
+branch = True
+source = darkon
+
+[paths]
+source =
+    darkon
+    .tox/*/lib/python*/site-packages/darkon
+    .tox/pypy*/site-packages/darkon
+

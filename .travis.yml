@@ -3,13 +3,17 @@ language: python
 python:
     - "2.7"
     - "3.6"
+    - "pypy"
 
 before_install:
 - sudo apt-get update -qq
 - sudo apt-get install -qq pandoc
 
-install:
-- pip install -r requirements-dev.txt
+install: pip install -r requirements-dev.txt
+
 script:
 - tox
+
+after_success:
+- tox -e coverage-report
 - codecov
