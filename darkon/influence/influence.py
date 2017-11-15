@@ -50,21 +50,25 @@ class Influence:
         Parameters
         ----------
         workspace: str
-            path for workspace directory
+            Path for workspace directory
         feeder : InfluenceFeeder
-            dataset feeder
+            Dataset feeder
         loss_op_train : tf.Operation
-            tensor for loss function
+            Tensor for loss function used for training. it may includes regularization.
         loss_op_test : tf.Operation
-            tensor for loss function
+            Tensor for loss function for inference.
         x_placeholder : tf.Tensor
-            tensor from tf.placeholder()
+            Data place holder
+            Tensor from tf.placeholder()
         y_placeholder : tf.Tensor
-            tensor from tf.placeholder()
+            Target place holder
+            Tensor from tf.placeholder()
         feed_options : dict
-            optional parameters to run loss operation
+            Optional parameters to run loss operation
         trainable_variables : tuple, or list
-            description
+            Trainable variables to be used
+            If None, all variables are trainable
+            Default: None
         """
         self.workspace = workspace
         self.feeder = feeder
@@ -110,20 +114,21 @@ class Influence:
 
     @timing
     def prepare(self, sess, test_indices, test_batch_size=64, approx_params=None, force_refresh=False):
-        """ Calculate inverse hessian vector, and save it in workspace
+        """ Calculate inverse hessian vector product, and save it in workspace
 
         Parameters
         ----------
         sess: tf.Session
-            desc
+            Tensorflow session
         test_indices: list
-            desc
+            Test samples to be used. Influence on these samples are calculated.
         approx_params: dict
-            desc
+            Parameters for inverse hessian vector product approximation
         force_refresh: bool
-            desc
+            If False, it calculates only when test samples and parameters are changed.
+            Default: False
         test_batch_size: int
-            desc
+            batch size for test samples
 
         """
         self.feeder.reset()
@@ -141,16 +146,18 @@ class Influence:
 
     @timing
     def upweighting_influence(self, sess, train_indices, num_total_train_example):
-        """ Measure loss different
+        """ Calculate influence score of given training samples
+         Negative value indicates bad effect on the test loss with test samples in prepare()
+         prepare() should be called beforehand
 
         Parameters
         ----------
         sess: tf.Session
-            desc
+            Tensorflow session
         train_indices: list
-            desc
+            Training samples indices to be calculcated.
         num_total_train_example: int
-            desc
+            Number of total training samples used for training
 
         Returns
         -------
@@ -164,18 +171,23 @@ class Influence:
 
     @timing
     def upweighting_influence_batch(self, sess, train_batch_size, num_iters, num_subsampling=-1):
-        """ Measure loss different
+        """ Iteratively calculate influence scores for training samples
+        Negative value indicates bad effect on the test loss with test samples in prepare()
+        prepare() should be called beforehand
 
         Parameters
         ----------
         sess: tf.Session
-            desc
+            Tensorflow session
         train_batch_size: int
-            desc
+            Batch size of training samples
         num_iters: int
-            desc
+            Number of iterations
         num_subsampling: int
-            desc
+            Number of training samples in a batch to be calculated.
+            If -1, all samples are calculated (no subsampling).
+            Default: -1
+
 
         Returns
         -------
