@@ -3,3 +3,4 @@ tox
 pypandoc
 codecov
 tox-travis
+pytest-cov
