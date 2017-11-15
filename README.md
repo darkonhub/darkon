@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/darkonhub/darkon.svg?branch=master)](https://travis-ci.org/darkonhub/darkon)
+---------------------------------------------------
+
 **Darkon: Performance hacking for your AI model**
 
 **Darkon** is an open source software library for improving and debugging deep learning models. People think that deep neural network is a black-box that requires only large dataset and expect learning algorithms returns well-performing models. However, trained models often fail in real world usages, and it is difficult to fix such failure due to the black-box nature of deep neural networks.
