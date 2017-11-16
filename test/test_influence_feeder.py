@@ -47,7 +47,30 @@ class MyFeeder(darkon.InfluenceFeeder):
         return self.test_x[indices], self.test_y[indices]
 
 
-class InfluenceFeeder(unittest.TestCase):
+class TestInfluenceFeeder(unittest.TestCase):
+    def test_interface_without_implementation(self):
+        self.assertRaises(Exception, darkon.InfluenceFeeder)
+
+    def test_interface(self):
+        class ParentTestFeeder(darkon.InfluenceFeeder):
+            def reset(self):
+                return super(ParentTestFeeder, self).reset()
+
+            def train_batch(self, batch_size):
+                return super(ParentTestFeeder, self).train_batch(batch_size)
+
+            def train_one(self, index):
+                return super(ParentTestFeeder, self).train_batch(index)
+
+            def test_indices(self, indices):
+                return super(ParentTestFeeder, self).train_batch(indices)
+
+        feeder = ParentTestFeeder()
+        self.assertRaises(RuntimeError, feeder.reset)
+        self.assertRaises(RuntimeError, feeder.train_batch, 1)
+        self.assertRaises(RuntimeError, feeder.train_one, 0)
+        self.assertRaises(RuntimeError, feeder.test_indices, [0])
+
     def test_reset(self):
         feeder = MyFeeder()
         feeder.reset()

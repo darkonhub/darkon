@@ -16,17 +16,16 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import abc
+import six
 
 
+@six.add_metaclass(abc.ABCMeta)
 class InfluenceFeeder:
-    def __init__(self):
-        pass
-
     @abc.abstractmethod
     def reset(self):
         """ reset dataset
         """
-        pass
+        raise RuntimeError('must be implemented')
 
     @abc.abstractmethod
     def train_batch(self, batch_size):
@@ -41,7 +40,7 @@ class InfluenceFeeder:
         xs : feed input values
         ys : feed label values
         """
-        pass
+        raise RuntimeError('must be implemented')
 
     @abc.abstractmethod
     def train_one(self, index):
@@ -56,7 +55,7 @@ class InfluenceFeeder:
         x : feed one input value
         y : feed one label value
         """
-        pass
+        raise RuntimeError('must be implemented')
 
     @abc.abstractmethod
     def test_indices(self, indices):
@@ -71,4 +70,4 @@ class InfluenceFeeder:
         x : feed input values
         y : feed label values
         """
-        pass
+        raise RuntimeError('must be implemented')

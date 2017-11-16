@@ -27,6 +27,7 @@ import os
 import time
 import hashlib
 import json
+from ..log import logger
 
 _using_fully_tf = True
 
@@ -36,15 +37,14 @@ def timing(f):
         time1 = time.time()
         ret = f(*args, **kwargs)
         time2 = time.time()
-        print('* %s function took [%.3fs]' % (f.__name__, time2-time1))
+        logger.debug('* %s function took [%.3fs]' % (f.__name__, time2-time1))
         return ret
     return wrap
 
 
-# TODO: all of print function must be replaced to Logging function
 class Influence:
     def __init__(self, workspace, feeder, loss_op_train, loss_op_test, x_placeholder, y_placeholder,
-                 feed_options={}, trainable_variables=None):
+                 test_feed_options=None, train_feed_options=None, trainable_variables=None):
         """ Create Influence instance
 
         Parameters
@@ -63,8 +63,10 @@ class Influence:
         y_placeholder : tf.Tensor
             Target place holder
             Tensor from tf.placeholder()
-        feed_options : dict
-            Optional parameters to run loss operation
+        test_feed_options : dict
+            Optional parameters to run loss operation in testset
+        train_feed_options : dict
+            Optional parameters to run loss operation in trainset
         trainable_variables : tuple, or list
             Trainable variables to be used
             If None, all variables are trainable
@@ -74,7 +76,8 @@ class Influence:
         self.feeder = feeder
         self.x_placeholder = x_placeholder
         self.y_placeholder = y_placeholder
-        self.feed_options = feed_options
+        self.test_feed_options = test_feed_options if test_feed_options else dict()
+        self.train_feed_options = train_feed_options if train_feed_options else dict()
 
         if trainable_variables is None:
             trainable_variables = (
@@ -141,7 +144,7 @@ class Influence:
 
         self.feeder.reset()
         score = self._grad_diffs(sess, train_indices, num_total_train_example)
-        print('Multiplying by %s train examples' % score.size)
+        logger.info('Multiplying by %s train examples' % score.size)
         return score
 
     @timing
@@ -187,7 +190,7 @@ class Influence:
 
         self.feeder.reset()
         score = self._grad_diffs_all(sess, train_batch_size, train_iterations, subsamples)
-        print('Multiplying by %s train examples' % score.size)
+        logger.info('Multiplying by %s train examples' % score.size)
         return score
 
     @timing
@@ -220,13 +223,13 @@ class Influence:
         if not os.path.exists(inv_hvp_path) or force_refresh:
             self.feeder.reset()
             test_grad_loss = self._get_test_grad_loss(sess, test_indices, test_batch_size)
-            print('Norm of test gradient: %s' % np.linalg.norm(np.concatenate([a.reshape(-1) for a in test_grad_loss])))
+            logger.info('Norm of test gradient: %s' % np.linalg.norm(np.concatenate([a.reshape(-1) for a in test_grad_loss])))
             self.inverse_hvp = self._get_inverse_hvp_lissa(sess, test_grad_loss)
             np.savez(inv_hvp_path, inverse_hvp=self.inverse_hvp, encoding='bytes')
-            print('Saved inverse HVP to %s' % inv_hvp_path)
+            logger.info('Saved inverse HVP to %s' % inv_hvp_path)
         else:
             self.inverse_hvp = np.load(inv_hvp_path, encoding='bytes')['inverse_hvp']
-            print('Loaded inverse HVP from %s' % inv_hvp_path)
+            logger.info('Loaded inverse HVP from %s' % inv_hvp_path)
 
     def _get_test_grad_loss(self, sess, test_indices, test_batch_size):
         if test_indices is not None:
@@ -237,7 +240,7 @@ class Influence:
                 end = int(min((i + 1) * test_batch_size, len(test_indices)))
                 size = float(end - start)
 
-                test_feed_dict = self._make_feed_dict(*self.feeder.test_indices(test_indices[start:end]))
+                test_feed_dict = self._make_test_feed_dict(*self.feeder.test_indices(test_indices[start:end]))
                 temp = sess.run(self.grad_op_test, feed_dict=test_feed_dict)
                 temp = np.asarray(temp)
 
@@ -283,7 +286,7 @@ class Influence:
 
             for j in range(ihvp_config['recursion_depth']):
                 train_batch_data, train_batch_label = self.feeder.train_batch(ihvp_config['recursion_batch_size'])
-                feed_dict = self._make_feed_dict(train_batch_data, train_batch_label)
+                feed_dict = self._make_train_feed_dict(train_batch_data, train_batch_label)
                 feed_dict = self._update_feed_dict(feed_dict, cur_estimate)
 
                 if _using_fully_tf:
@@ -298,8 +301,8 @@ class Influence:
                 # prev_estimation_norm = curr_estimation_norm
 
                 if (j % print_iter == 0) or (j == ihvp_config['recursion_depth'] - 1):
-                    print("Recursion at depth %s: norm is %.8lf" %
-                          (j, np.linalg.norm(np.concatenate([a.reshape(-1) for a in cur_estimate]))))
+                    logger.info("Recursion at depth %s: norm is %.8lf" %
+                                (j, np.linalg.norm(np.concatenate([a.reshape(-1) for a in cur_estimate]))))
 
             if inverse_hvp is None:
                 inverse_hvp = np.array(cur_estimate) / ihvp_config['scale']
@@ -335,12 +338,12 @@ class Influence:
 
         for counter, idx_to_remove in enumerate(train_indices):
             single_data, single_label = self.feeder.train_one(idx_to_remove)
-            feed_dict = self._make_feed_dict([single_data], [single_label])
+            feed_dict = self._make_train_feed_dict([single_data], [single_label])
             predicted_grad_diffs[counter] = self._grad_diff(sess, feed_dict, num_total_train_example, grad_diff_op,
                                                             inverse_hvp)
 
             if (counter % 1000) == 0:
-                print('counter: {} / {}'.format(counter, num_to_remove))
+                logger.info('counter: {} / {}'.format(counter, num_to_remove))
 
         return predicted_grad_diffs
 
@@ -362,19 +365,19 @@ class Influence:
 
             if num_subsampling > 0:
                 for idx in range(num_subsampling):
-                    feed_dict = self._make_feed_dict(train_batch_data[idx:idx+1], train_batch_label[idx:idx+1])
+                    feed_dict = self._make_train_feed_dict(train_batch_data[idx:idx + 1], train_batch_label[idx:idx + 1])
                     predicted_grad_diffs[counter] = self._grad_diff(sess, feed_dict, num_total_train_example,
                                                                     grad_diff_op, inverse_hvp)
                     counter += 1
             else:
                 for single_data, single_label in zip(train_batch_data, train_batch_label):
-                    feed_dict = self._make_feed_dict([single_data], [single_label])
+                    feed_dict = self._make_train_feed_dict([single_data], [single_label])
                     predicted_grad_diffs[counter] = self._grad_diff(sess, feed_dict, num_total_train_example,
                                                                     grad_diff_op, inverse_hvp)
                     counter += 1
 
             if (it % 100) == 0:
-                print('iter: {}/{}'.format(it, num_iters))
+                logger.info('iter: {}/{}'.format(it, num_iters))
 
         return predicted_grad_diffs
 
@@ -395,12 +398,20 @@ class Influence:
             train_grads /= num_total_train_example
             return np.dot(inverse_hvp, train_grads)
 
-    def _make_feed_dict(self, xs, ys):
+    def _make_test_feed_dict(self, xs, ys):
         ret = {
             self.x_placeholder: xs,
             self.y_placeholder: ys,
         }
-        ret.update(**self.feed_options)
+        ret.update(self.test_feed_options)
+        return ret
+
+    def _make_train_feed_dict(self, xs, ys):
+        ret = {
+            self.x_placeholder: xs,
+            self.y_placeholder: ys,
+        }
+        ret.update(self.train_feed_options)
         return ret
 
     def _path(self, *paths):
