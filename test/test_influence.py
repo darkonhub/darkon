@@ -17,16 +17,7 @@ import unittest
 import darkon
 import tensorflow as tf
 import numpy as np
-
-
-def weight_variable(shape, name):
-    initial = tf.truncated_normal(shape, stddev=0.1)
-    return tf.Variable(initial, name=name)
-
-
-def bias_variable(shape, name):
-    initial = tf.constant(0.1, shape=shape)
-    return tf.Variable(initial, name=name)
+from .tf_util import weight_variable, bias_variable
 
 
 _num_train_data = 20
@@ -37,7 +28,23 @@ _batch_size = 4
 _num_iterations = 5
 
 
-class ModuleCheck(unittest.TestCase):
+def nn_graph():
+    # create graph
+    x = tf.placeholder(tf.float32, name='x_placeholder')
+    y = tf.placeholder(tf.int32, name='y_placeholder')
+
+    with tf.name_scope('fc1'):
+        W_fc1 = weight_variable([_dim_features, _classes], 'weight')
+        b_fc1 = bias_variable([_classes], 'bias')
+        op_fc1 = tf.add(tf.matmul(x, W_fc1), b_fc1)
+
+    # set loss function
+    cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=y, logits=op_fc1)
+    cross_entropy = tf.reduce_mean(cross_entropy)
+    return x, y, cross_entropy
+
+
+class TestInfluence(unittest.TestCase):
     def setUp(self):
         # init tf default graph
         tf.reset_default_graph()
@@ -66,18 +73,7 @@ class ModuleCheck(unittest.TestCase):
             def test_indices(self, indices):
                 return self.test_x[indices], self.test_y[indices]
 
-        # create graph
-        x = tf.placeholder(tf.float32, name='x_placeholder')
-        y = tf.placeholder(tf.int32, name='y_placeholder')
-
-        with tf.name_scope('fc1'):
-            W_fc1 = weight_variable([_dim_features, _classes], 'weight')
-            b_fc1 = bias_variable([_classes], 'bias')
-            op_fc1 = tf.add(tf.matmul(x, W_fc1), b_fc1)
-
-        # set loss function
-        cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=y, logits=op_fc1)
-        cross_entropy = tf.reduce_mean(cross_entropy)
+        x, y, cross_entropy = nn_graph()
 
         # initialize influence function
         self.insp = darkon.Influence(workspace='./tmp',
@@ -116,7 +112,6 @@ class ModuleCheck(unittest.TestCase):
                                                        train_batch_size=_batch_size,
                                                        train_iterations=_num_iterations,
                                                        force_refresh=True)
-        self.assertEqual(_batch_size * _num_iterations, len(result))
 
         # get influence scores for all trainset
         result2 = self.insp.upweighting_influence_batch(self.sess,
@@ -126,8 +121,8 @@ class ModuleCheck(unittest.TestCase):
                                                         train_batch_size=_batch_size,
                                                         train_iterations=_num_iterations,
                                                         force_refresh=False)
-        self.assertEqual(_batch_size * _num_iterations, len(result2))
 
+        self.assertEqual(_batch_size * _num_iterations, len(result2))
         self.assertTrue(np.all(result == result2))
 
         selected_trainset = [2, 3, 0, 9, 14, 19, 8]
