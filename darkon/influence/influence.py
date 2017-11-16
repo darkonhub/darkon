@@ -134,9 +134,9 @@ class Influence:
         self._prepare(sess, test_indices, test_batch_size, approx_params, force_refresh)
 
         self.feeder.reset()
-        predicted_loss_diffs = self._grad_diffs(sess, train_indices, num_total_train_example)
-        print('Multiplying by %s train examples' % predicted_loss_diffs.size)
-        return predicted_loss_diffs
+        score = self._grad_diffs(sess, train_indices, num_total_train_example)
+        print('Multiplying by %s train examples' % score.size)
+        return score
 
     @timing
     def upweighting_influence_batch(self, sess, test_indices, test_batch_size, approx_params,
@@ -175,9 +175,9 @@ class Influence:
         self._prepare(sess, test_indices, test_batch_size, approx_params, force_refresh)
 
         self.feeder.reset()
-        predicted_loss_diffs = self._grad_diffs_all(sess, train_batch_size, train_iterations, subsamples)
-        print('Multiplying by %s train examples' % predicted_loss_diffs.size)
-        return predicted_loss_diffs
+        score = self._grad_diffs_all(sess, train_batch_size, train_iterations, subsamples)
+        print('Multiplying by %s train examples' % score.size)
+        return score
 
     @timing
     def _prepare(self, sess, test_indices, test_batch_size, approx_params, force_refresh):
