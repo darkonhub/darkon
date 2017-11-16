@@ -39,6 +39,7 @@ _num_iterations = 5
 
 class ModuleCheck(unittest.TestCase):
     def setUp(self):
+        # init tf default graph
         tf.reset_default_graph()
 
         # dataset feeder
@@ -74,13 +75,24 @@ class ModuleCheck(unittest.TestCase):
             b_fc1 = bias_variable([_classes], 'bias')
             op_fc1 = tf.add(tf.matmul(x, W_fc1), b_fc1)
 
+        # set loss function
         cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=y, logits=op_fc1)
         cross_entropy = tf.reduce_mean(cross_entropy)
 
-        self.feeder_cls = MyFeeder
-        self.loss_op = cross_entropy
-        self.x = x
-        self.y = y
+        # initialize influence function
+        self.insp = darkon.Influence(workspace='./tmp',
+                                     feeder=MyFeeder(),
+                                     loss_op_train=cross_entropy,
+                                     loss_op_test=cross_entropy,
+                                     x_placeholder=x,
+                                     y_placeholder=y)
+        # open session
+        self.sess = tf.InteractiveSession()
+        saver = tf.train.Saver()
+        saver.restore(self.sess, tf.train.latest_checkpoint('test/data'))
+
+    def tearDown(self):
+        self.sess.close()
 
     # def test_freeze_graph(self):
     #     saver = tf.train.Saver()
@@ -90,172 +102,111 @@ class ModuleCheck(unittest.TestCase):
     #         saver.save(sess, 'test/data/model', global_step=0)
 
     def test_influence(self):
-        # initialize influence function
-        inspector = darkon.Influence(workspace='./tmp',
-                                     feeder=self.feeder_cls(),
-                                     loss_op_train=self.loss_op,
-                                     loss_op_test=self.loss_op,
-                                     x_placeholder=self.x,
-                                     y_placeholder=self.y)
+        test_indices = [0]
+        approx_params = {'scale': 10,
+                         'num_repeats': 3,
+                         'recursion_depth': 2,
+                         'recursion_batch_size': _batch_size}
 
-        self.assertNotEqual(None, inspector)
+        # get influence scores for all trainset
+        result = self.insp.upweighting_influence_batch(self.sess,
+                                                       test_indices=test_indices,
+                                                       test_batch_size=_batch_size,
+                                                       approx_params=approx_params,
+                                                       train_batch_size=_batch_size,
+                                                       train_iterations=_num_iterations,
+                                                       force_refresh=True)
+        self.assertEqual(_batch_size * _num_iterations, len(result))
 
-        saver = tf.train.Saver()
-        with tf.Session() as sess:
-            saver.restore(sess, tf.train.latest_checkpoint('test/data'))
+        # get influence scores for all trainset
+        result2 = self.insp.upweighting_influence_batch(self.sess,
+                                                        test_indices=test_indices,
+                                                        test_batch_size=_batch_size,
+                                                        approx_params=approx_params,
+                                                        train_batch_size=_batch_size,
+                                                        train_iterations=_num_iterations,
+                                                        force_refresh=False)
+        self.assertEqual(_batch_size * _num_iterations, len(result2))
 
-            # make inverse hessian vector
-            test_indices = [0]
-            approx_params = {'scale': 10,
-                             'num_repeats': 3,
-                             'recursion_depth': 2,
-                             'recursion_batch_size': _batch_size}
+        self.assertTrue(np.all(result == result2))
 
-            # get influence scores for all trainset
-            result = inspector.upweighting_influence_batch(sess,
-                                                           train_batch_size=_batch_size,
-                                                           num_iters=_num_iterations,
-                                                           force_refresh=True,
-                                                           test_indices=test_indices,
-                                                           test_batch_size=_batch_size,
-                                                           approx_params=approx_params)
-            self.assertEqual(_batch_size * _num_iterations, len(result))
-
-            # get influence scores for all trainset
-            result2 = inspector.upweighting_influence_batch(sess,
-                                                            train_batch_size=_batch_size,
-                                                            num_iters=_num_iterations,
-                                                            force_refresh=False,
-                                                            test_indices=test_indices,
-                                                            test_batch_size=_batch_size,
-                                                            approx_params=approx_params)
-            self.assertEqual(_batch_size * _num_iterations, len(result2))
-
-            self.assertTrue(np.all(result == result2))
-
-            selected_trainset = [2, 3, 0, 9, 14, 19, 8]
-            result_partial = inspector.upweighting_influence(sess,
-                                                             selected_trainset,
-                                                             _num_train_data,
-                                                             force_refresh=False,
-                                                             test_indices=test_indices,
-                                                             test_batch_size=_batch_size,
-                                                             approx_params=approx_params)
-            self.assertEqual(7, len(result_partial))
+        selected_trainset = [2, 3, 0, 9, 14, 19, 8]
+        result_partial = self.insp.upweighting_influence(self.sess,
+                                                         test_indices=test_indices,
+                                                         test_batch_size=_batch_size,
+                                                         approx_params=approx_params,
+                                                         train_indices=selected_trainset,
+                                                         num_total_train_example=_num_train_data,
+                                                         force_refresh=False)
+        self.assertEqual(7, len(result_partial))
 
     def test_influence_sampling(self):
-        # initialize influence function
-        inspector = darkon.Influence(workspace='./tmp',
-                                     feeder=self.feeder_cls(),
-                                     loss_op_train=self.loss_op,
-                                     loss_op_test=self.loss_op,
-                                     x_placeholder=self.x,
-                                     y_placeholder=self.y)
+        test_indices = [0]
+        approx_batch_size = _batch_size
+        approx_params = {'scale': 10,
+                         'num_repeats': 3,
+                         'recursion_depth': 2,
+                         'recursion_batch_size': approx_batch_size}
 
-        saver = tf.train.Saver()
-        with tf.Session() as sess:
-            saver.restore(sess, tf.train.latest_checkpoint('test/data'))
+        result = self.insp.upweighting_influence_batch(self.sess,
+                                                       test_indices=test_indices,
+                                                       test_batch_size=_batch_size,
+                                                       approx_params=approx_params,
+                                                       train_batch_size=_batch_size,
+                                                       train_iterations=_num_iterations,
+                                                       force_refresh=False)
+        self.assertEqual(_batch_size * _num_iterations, len(result))
 
-            # make inverse hessian vector
-            test_indices = [0]
-            approx_batch_size = _batch_size
-            approx_params = {'scale': 10,
-                             'num_repeats': 3,
-                             'recursion_depth': 2,
-                             'recursion_batch_size': approx_batch_size}
+        num_batch_sampling = 2
+        result2 = self.insp.upweighting_influence_batch(self.sess,
+                                                        test_indices=test_indices,
+                                                        test_batch_size=_batch_size,
+                                                        approx_params=approx_params,
+                                                        train_batch_size=_batch_size,
+                                                        train_iterations=_num_iterations,
+                                                        subsamples=num_batch_sampling,
+                                                        force_refresh=False)
+        self.assertEqual(num_batch_sampling * _num_iterations, len(result2))
 
-            result = inspector.upweighting_influence_batch(sess,
-                                                           _batch_size,
-                                                           _num_iterations,
-                                                           force_refresh=False,
-                                                           test_indices=test_indices,
-                                                           test_batch_size=_batch_size,
-                                                           approx_params=approx_params)
-            self.assertEqual(_batch_size * _num_iterations, len(result))
-
-            num_batch_sampling = 2
-            result2 = inspector.upweighting_influence_batch(sess,
-                                                            _batch_size,
-                                                            _num_iterations,
-                                                            num_batch_sampling,
-                                                            force_refresh=False,
-                                                            test_indices=test_indices,
-                                                            test_batch_size=_batch_size,
-                                                            approx_params=approx_params)
-            self.assertEqual(num_batch_sampling * _num_iterations, len(result2))
-
-            result = result.reshape(_num_iterations, _batch_size)
-            result2 = result2.reshape(_num_iterations, num_batch_sampling)
-            result = result[:, :num_batch_sampling]
-            self.assertTrue(np.all(result == result2))
+        result = result.reshape(_num_iterations, _batch_size)
+        result2 = result2.reshape(_num_iterations, num_batch_sampling)
+        result = result[:, :num_batch_sampling]
+        self.assertTrue(np.all(result == result2))
 
     def test_unknown_approx_key(self):
-        inspector = darkon.Influence(workspace='./tmp',
-                                     feeder=self.feeder_cls(),
-                                     loss_op_train=self.loss_op,
-                                     loss_op_test=self.loss_op,
-                                     x_placeholder=self.x,
-                                     y_placeholder=self.y)
-
-        saver = tf.train.Saver()
-        with tf.Session() as sess:
-            saver.restore(sess, tf.train.latest_checkpoint('test/data'))
-
-            test_indices = [0]
-            approx_params = {'unknown_param': 1}
-            self.assertRaises(RuntimeError,
-                              inspector.upweighting_influence_batch,
-                              sess,
-                              _batch_size,
-                              _num_iterations,
-                              test_indices=test_indices,
-                              test_batch_size=_batch_size,
-                              approx_params=approx_params)
+        test_indices = [0]
+        approx_params = {'unknown_param': 1}
+        self.assertRaises(RuntimeError,
+                          self.insp.upweighting_influence_batch,
+                          self.sess,
+                          test_indices=test_indices,
+                          test_batch_size=_batch_size,
+                          approx_params=approx_params,
+                          train_batch_size=_batch_size,
+                          train_iterations=_num_iterations)
 
     def test_default_approx_params(self):
-        inspector = darkon.Influence(workspace='./tmp',
-                                     feeder=self.feeder_cls(),
-                                     loss_op_train=self.loss_op,
-                                     loss_op_test=self.loss_op,
-                                     x_placeholder=self.x,
-                                     y_placeholder=self.y)
-
-        saver = tf.train.Saver()
-        with tf.Session() as sess:
-            saver.restore(sess, tf.train.latest_checkpoint('test/data'))
-
-            test_indices = [0]
-            inspector.upweighting_influence_batch(sess,
-                                                  _batch_size,
-                                                  _num_iterations,
-                                                  test_indices=test_indices,
-                                                  test_batch_size=_batch_size)
+        test_indices = [0]
+        self.insp.upweighting_influence_batch(self.sess,
+                                              test_indices=test_indices,
+                                              test_batch_size=_batch_size,
+                                              train_batch_size=_batch_size,
+                                              train_iterations=_num_iterations)
 
     def test_approx_filename(self):
-        inspector = darkon.Influence(workspace='./tmp',
-                                     feeder=self.feeder_cls(),
-                                     loss_op_train=self.loss_op,
-                                     loss_op_test=self.loss_op,
-                                     x_placeholder=self.x,
-                                     y_placeholder=self.y)
+        test_indices = [0]
+        approx_params = {'scale': 10,
+                         'num_repeats': 3,
+                         'recursion_depth': 2,
+                         'recursion_batch_size': _batch_size}
 
-        saver = tf.train.Saver()
-        with tf.Session() as sess:
-            saver.restore(sess, tf.train.latest_checkpoint('test/data'))
+        inv_hvp_filename = 'ihvp.c089c98599898bfb0e7f920c9dfe533af38b5481.npz'
+        self.insp.ihvp_config.update(approx_params)
+        self.assertEqual(inv_hvp_filename, self.insp._approx_filename(self.sess, test_indices))
 
-            test_indices = [0]
-            approx_params = {'scale': 10,
-                             'num_repeats': 3,
-                             'recursion_depth': 2,
-                             'recursion_batch_size': _batch_size}
+        test_indices = [1]
+        self.assertNotEqual(inv_hvp_filename, self.insp._approx_filename(self.sess, test_indices))
 
-            inv_hvp_filename = 'ihvp.c089c98599898bfb0e7f920c9dfe533af38b5481.npz'
-            inspector.ihvp_config.update(approx_params)
-            self.assertEqual(inv_hvp_filename, inspector._approx_filename(sess, test_indices))
-
-            test_indices = [1]
-            self.assertNotEqual(inv_hvp_filename, inspector._approx_filename(sess, test_indices))
-
-            test_indices = [0]
-            inspector.ihvp_config.update(scale=1)
-            self.assertNotEqual(inv_hvp_filename, inspector._approx_filename(sess, test_indices))
+        test_indices = [0]
+        self.insp.ihvp_config.update(scale=1)
+        self.assertNotEqual(inv_hvp_filename, self.insp._approx_filename(self.sess, test_indices))

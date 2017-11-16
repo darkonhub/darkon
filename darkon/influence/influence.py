@@ -112,8 +112,8 @@ class Influence:
     def _path(self, *paths):
         return os.path.join(self.workspace, *paths)
 
-    # @timing
-    def _prepare(self, sess, test_indices, test_batch_size, approx_params=None, force_refresh=False):
+    @timing
+    def _prepare(self, sess, test_indices, test_batch_size, force_refresh, approx_params=None):
         """ Calculate inverse hessian vector product, and save it in workspace
 
         Parameters
@@ -124,11 +124,11 @@ class Influence:
             Test samples to be used. Influence on these samples are calculated.
         test_batch_size: int
             batch size for test samples
-        approx_params: dict
-            Parameters for inverse hessian vector product approximation
         force_refresh: bool
             If False, it calculates only when test samples and parameters are changed.
             Default: False
+        approx_params: dict
+            Parameters for inverse hessian vector product approximation
 
         """
         # update ihvp approx params
@@ -181,7 +181,7 @@ class Influence:
         return predicted_loss_diffs
 
     @timing
-    def upweighting_influence_batch(self, sess, train_batch_size, num_iters, num_subsampling=-1, force_refresh=False, **kwargs):
+    def upweighting_influence_batch(self, sess, train_batch_size, train_iterations, subsamples=-1, force_refresh=False, **kwargs):
         """ Iteratively calculate influence scores for training samples
         Negative value indicates bad effect on the test loss with test samples in prepare()
         prepare() should be called beforehand
@@ -192,13 +192,15 @@ class Influence:
             Tensorflow session
         train_batch_size: int
             Batch size of training samples
-        num_iters: int
+        train_iterations: int
             Number of iterations
-        num_subsampling: int
+        subsamples: int
             Number of training samples in a batch to be calculated.
             If -1, all samples are calculated (no subsampling).
             Default: -1
-
+        force_refresh: bool
+            If False, it calculates only when test samples and parameters are changed.
+            Default: False
 
         Returns
         -------
@@ -208,7 +210,7 @@ class Influence:
         self._prepare(sess, force_refresh=force_refresh, **kwargs)
 
         self.feeder.reset()
-        predicted_loss_diffs = self._grad_diffs_all(sess, train_batch_size, num_iters, num_subsampling)
+        predicted_loss_diffs = self._grad_diffs_all(sess, train_batch_size, train_iterations, subsamples)
         print('Multiplying by %s train examples' % predicted_loss_diffs.size)
         return predicted_loss_diffs
 

@@ -48,7 +48,7 @@ class MyFeeder(darkon.InfluenceFeeder):
 
 
 class InfluenceFeeder(unittest.TestCase):
-    def test_feeder_reset(self):
+    def test_reset(self):
         feeder = MyFeeder()
         feeder.reset()
         data1 = np.array(feeder.train_batch(4)[0])
@@ -60,3 +60,25 @@ class InfluenceFeeder(unittest.TestCase):
         data2_next = np.array(feeder.train_batch(4)[0])
         self.assertTrue(np.all(data1 == data2))
         self.assertTrue(np.all(data1_next == data2_next))
+
+    def test_train_batch(self):
+        feeder = MyFeeder()
+        data, label = feeder.train_batch(4)
+        self.assertEqual(4, len(data))
+        self.assertEqual(4, len(label))
+
+        data, label = feeder.train_batch(1)
+        self.assertEqual(1, len(data))
+        self.assertEqual(1, len(label))
+
+    def test_test_indices(self):
+        feeder = MyFeeder()
+        data, label = feeder.test_indices([2, 0])
+        self.assertEqual(2, len(data))
+        self.assertEqual(2, len(label))
+
+    def test_train_one(self):
+        feeder = MyFeeder()
+        data, label = feeder.train_one(2)
+        self.assertEqual(_dim_features, data.size)
+        self.assertEqual(_classes, label.size)
