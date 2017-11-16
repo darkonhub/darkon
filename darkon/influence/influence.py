@@ -314,6 +314,7 @@ class Influence:
             feed_dict[placeholder] = variable
         return feed_dict
 
+    @timing
     def _grad_diffs(self, sess, train_indices, num_total_train_example):
         inverse_hvp = np.concatenate([a.reshape(-1) for a in self.inverse_hvp])
         grad_diff_op = self._grad_diff_op(num_total_train_example)
@@ -332,6 +333,7 @@ class Influence:
 
         return predicted_grad_diffs
 
+    @timing
     def _grad_diffs_all(self, sess, train_batch_size, num_iters, num_subsampling):
         num_total_train_example = num_iters * train_batch_size
         if num_subsampling > 0:
