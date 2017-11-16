@@ -104,9 +104,8 @@ class Influence:
     @timing
     def upweighting_influence(self, sess, test_indices, test_batch_size, approx_params,
                               train_indices, num_total_train_example, force_refresh=False):
-        """ Calculate influence score of given training samples
-         Negative value indicates bad effect on the test loss with test samples in prepare()
-         prepare() should be called beforehand
+        """ Calculate influence score of given training samples that affect on the test samples
+         Negative value indicates bad effect on the test loss
 
         Parameters
         ----------
@@ -118,10 +117,17 @@ class Influence:
             batch size for test samples
         approx_params: dict
             Parameters for inverse hessian vector product approximation
+            Default:
+                {'scale': 1e4,
+                'damping': 0.01,
+                'num_repeats': 1,
+                'recursion_batch_size': 10,
+                'recursion_depth': 10000}
         train_indices: list
             Training samples indices to be calculated.
         num_total_train_example: int
-            Number of total training samples used for training
+            Number of total training samples used for training,
+            which might be different from the size of train_indices
         force_refresh: bool
             If False, it calculates only when test samples and parameters are changed.
             Default: False
@@ -141,9 +147,8 @@ class Influence:
     @timing
     def upweighting_influence_batch(self, sess, test_indices, test_batch_size, approx_params,
                                     train_batch_size, train_iterations, subsamples=-1, force_refresh=False):
-        """ Iteratively calculate influence scores for training samples
-        Negative value indicates bad effect on the test loss with test samples in prepare()
-        prepare() should be called beforehand
+        """ Iteratively calculate influence scores for training data sampled by batch sampler
+        Negative value indicates bad effect on the test loss
 
         Parameters
         ----------
@@ -155,6 +160,12 @@ class Influence:
             batch size for test samples
         approx_params: dict
             Parameters for inverse hessian vector product approximation
+            Default:
+                {'scale': 1e4,
+                'damping': 0.01,
+                'num_repeats': 1,
+                'recursion_batch_size': 10,
+                'recursion_depth': 10000}
         train_batch_size: int
             Batch size of training samples
         train_iterations: int
