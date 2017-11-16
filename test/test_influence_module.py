@@ -187,11 +187,20 @@ class ModuleCheck(unittest.TestCase):
 
     def test_default_approx_params(self):
         test_indices = [0]
-        self.insp.upweighting_influence_batch(self.sess,
-                                              test_indices=test_indices,
-                                              test_batch_size=_batch_size,
-                                              train_batch_size=_batch_size,
-                                              train_iterations=_num_iterations)
+        r = self.insp.upweighting_influence_batch(self.sess,
+                                                  test_indices=test_indices,
+                                                  test_batch_size=_batch_size,
+                                                  approx_params=None,
+                                                  train_batch_size=_batch_size,
+                                                  train_iterations=_num_iterations)
+
+        r2 = self.insp.upweighting_influence_batch(self.sess,
+                                                   test_indices,
+                                                   _batch_size,
+                                                   None,
+                                                   _batch_size,
+                                                   _num_iterations)
+        self.assertTrue(np.all(r == r2))
 
     def test_approx_filename(self):
         test_indices = [0]
