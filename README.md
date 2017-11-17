@@ -36,15 +36,33 @@ More features will be released soon. Feedback and feature request are always wel
 pip install darkon
 ```
 
+## Usage
+```python
+inspector = darkon.Influence(workspace_path,
+                             YourDataFeeder(),
+                             loss_op_train,
+                             loss_op_test,
+                             x_placeholder,
+                             y_placeholder)
+                             
+scores = inspector.upweighting_influence_batch(sess,
+                                               test_indices,
+                                               test_batch_size,
+                                               approx_params,
+                                               train_batch_size,
+                                               train_iterations)
+
+```
+
 ## Examples / Getting Started 
 - [Examples](https://github.com/darkonhub/darkon-examples) 
-- Documentation: ~~will be soon~~  
+- [Documentation](https://darkonhub.github.io)
 
 ## Communication
 - [Issues](https://github.com/darkonhub/darkon/issues): report issues, bugs, and request new features
 - [Pull request](https://github.com/darkonhub/darkon/pulls)
 - News: ~~link twitter account~~
-- Discuss: ~~gitter~~
+- Discuss: [![Gitter](https://badges.gitter.im/darkonhub/darkon.svg)](https://gitter.im/darkonhub/darkon?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 - Email: [darkon@neosapience.com](mailto:darkon@neosapience.com) 
 
 ## Authors
