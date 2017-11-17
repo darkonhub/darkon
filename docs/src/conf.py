@@ -70,7 +70,7 @@ info = json.load(open('../../info.json'))
 
 # General information about the project.
 project = info['name']
-copyright = u'2017, Neosapience, Inc.'
+copyright = info['copyright']
 author = info['authors']
 
 # The version info for the project you're documenting, acts as replacement for
