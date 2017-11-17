@@ -1,6 +1,6 @@
 pytest
 tox
-pypandoc
+m2r
 codecov
 tox-travis
 flake8

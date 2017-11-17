@@ -1,38 +1,46 @@
-"""Copyright 2017 Neosapience, Inc.
+# Copyright 2017 Neosapience, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ========================================================================
+"""
+References
+----------
+.. [1] Pang Wei Koh and Percy Liang "Understanding Black-box Predictions via Influence Functions" ICML2017
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
 """
 from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from tensorflow.python.ops.gradients_impl import _hessian_vector_product
 from .feeder import InfluenceFeeder  # noqa: ignore=F401
+from ..log import logger
 
 import numpy as np
 import tensorflow as tf
+from tensorflow.python.ops.gradients_impl import _hessian_vector_product
 
 import os
 import time
 import hashlib
 import json
-from ..log import logger
+from functools import wraps
 
 _using_fully_tf = True
 
 
-def timing(f):
+def _timing(f):
+    @wraps(f)
     def wrap(*args, **kwargs):
         time1 = time.time()
         ret = f(*args, **kwargs)
@@ -43,35 +51,37 @@ def timing(f):
 
 
 class Influence:
+    """ Influence Class
+
+    Parameters
+    ----------
+    workspace: str
+        Path for workspace directory
+    feeder : InfluenceFeeder
+        Dataset feeder
+    loss_op_train : tf.Operation
+        Tensor for loss function used for training. it may includes regularization.
+    loss_op_test : tf.Operation
+        Tensor for loss function for inference.
+    x_placeholder : tf.Tensor
+        Data place holder
+        Tensor from tf.placeholder()
+    y_placeholder : tf.Tensor
+        Target place holder
+        Tensor from tf.placeholder()
+    test_feed_options : dict
+        Optional parameters to run loss operation in testset
+    train_feed_options : dict
+        Optional parameters to run loss operation in trainset
+    trainable_variables : tuple, or list
+        Trainable variables to be used
+        If None, all variables are trainable
+        Default: None
+
+
+    """
     def __init__(self, workspace, feeder, loss_op_train, loss_op_test, x_placeholder, y_placeholder,
                  test_feed_options=None, train_feed_options=None, trainable_variables=None):
-        """ Create Influence instance
-
-        Parameters
-        ----------
-        workspace: str
-            Path for workspace directory
-        feeder : InfluenceFeeder
-            Dataset feeder
-        loss_op_train : tf.Operation
-            Tensor for loss function used for training. it may includes regularization.
-        loss_op_test : tf.Operation
-            Tensor for loss function for inference.
-        x_placeholder : tf.Tensor
-            Data place holder
-            Tensor from tf.placeholder()
-        y_placeholder : tf.Tensor
-            Target place holder
-            Tensor from tf.placeholder()
-        test_feed_options : dict
-            Optional parameters to run loss operation in testset
-        train_feed_options : dict
-            Optional parameters to run loss operation in trainset
-        trainable_variables : tuple, or list
-            Trainable variables to be used
-            If None, all variables are trainable
-            Default: None
-        """
         self.workspace = workspace
         self.feeder = feeder
         self.x_placeholder = x_placeholder
@@ -104,7 +114,7 @@ class Influence:
         if not os.path.exists(self.workspace):
             os.makedirs(self.workspace)
 
-    @timing
+    @_timing
     def upweighting_influence(self, sess, test_indices, test_batch_size, approx_params,
                               train_indices, num_total_train_example, force_refresh=False):
         """ Calculate influence score of given training samples that affect on the test samples
@@ -137,7 +147,7 @@ class Influence:
 
         Returns
         -------
-        array : np.ndarray
+        numpy.ndarray
 
         """
         self._prepare(sess, test_indices, test_batch_size, approx_params, force_refresh)
@@ -147,7 +157,7 @@ class Influence:
         logger.info('Multiplying by %s train examples' % score.size)
         return score
 
-    @timing
+    @_timing
     def upweighting_influence_batch(self, sess, test_indices, test_batch_size, approx_params,
                                     train_batch_size, train_iterations, subsamples=-1, force_refresh=False):
         """ Iteratively calculate influence scores for training data sampled by batch sampler
@@ -183,7 +193,7 @@ class Influence:
 
         Returns
         -------
-        array : np.ndarray
+        numpy.ndarray
 
         """
         self._prepare(sess, test_indices, test_batch_size, approx_params, force_refresh)
@@ -193,7 +203,7 @@ class Influence:
         logger.info('Multiplying by %s train examples' % score.size)
         return score
 
-    @timing
+    @_timing
     def _prepare(self, sess, test_indices, test_batch_size, approx_params, force_refresh):
         """ Calculate inverse hessian vector product, and save it in workspace
 
@@ -328,7 +338,7 @@ class Influence:
             feed_dict[placeholder] = variable
         return feed_dict
 
-    @timing
+    @_timing
     def _grad_diffs(self, sess, train_indices, num_total_train_example):
         inverse_hvp = np.concatenate([a.reshape(-1) for a in self.inverse_hvp])
         grad_diff_op = self._grad_diff_op(num_total_train_example)
@@ -347,7 +357,7 @@ class Influence:
 
         return predicted_grad_diffs
 
-    @timing
+    @_timing
     def _grad_diffs_all(self, sess, train_batch_size, num_iters, num_subsampling):
         num_total_train_example = num_iters * train_batch_size
         if num_subsampling > 0:
