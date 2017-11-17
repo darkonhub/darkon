@@ -2,5 +2,6 @@
   "name": "darkon",
   "version": "0.0.2",
   "authors": "Neosapience, Inc.",
-  "github_url": "https://github.com/darkonhub/darkon"
+  "github_url": "https://github.com/darkonhub/darkon",
+  "copyright": "2017 Neosapience, Inc"
 }
