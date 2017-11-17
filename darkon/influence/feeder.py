@@ -1,16 +1,19 @@
-"""Copyright 2017 Neosapience, Inc.
+# Copyright 2017 Neosapience, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ========================================================================
+""" Feeding interface for Influence class
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
 """
 from __future__ import absolute_import
 from __future__ import unicode_literals
@@ -39,6 +42,7 @@ class InfluenceFeeder:
         -------
         xs : feed input values
         ys : feed label values
+
         """
         raise RuntimeError('must be implemented')
 
@@ -54,6 +58,7 @@ class InfluenceFeeder:
         -------
         x : feed one input value
         y : feed one label value
+
         """
         raise RuntimeError('must be implemented')
 
@@ -69,5 +74,6 @@ class InfluenceFeeder:
         -------
         x : feed input values
         y : feed label values
+
         """
         raise RuntimeError('must be implemented')

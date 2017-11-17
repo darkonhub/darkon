@@ -1,24 +1,24 @@
 from setuptools import setup, find_packages
-import pypandoc
+from m2r import parse_from_file
+import json
 
-version = '0.0.1'
-github_url = 'https://github.com/darkonhub/darkon'
 
+info = json.load(open('info.json'))
 with open('requirements.txt') as f:
     deps = [str(dep.strip()) for dep in f.readlines()]
 
 setup(
-    name='darkon',
+    name=info['name'],
     packages=find_packages('.'),
-    version=version,
+    version=info['version'],
     description='Performance hacking for your deep learning models',
-    long_description=pypandoc.convert('README.md', 'rst'),
-    author='Neosapience, Inc.',
-    url=github_url,
-    download_url='{}/tarball/{}'.format(github_url, version),
+    long_description=parse_from_file('README.md', encoding='utf-8'),
+    author=info['authors'],
+    url=info['github_url'],
+    download_url='{}/tarball/{}'.format(info['github_url'], info['version']),
     keywords=['AI', 'ML', 'DL', 'deep learning', 'machine learning', 'neural network',
-                'deep neural network', 'debug neural networks', 'performance hacking',
-                'tensorflow', 'tf'],
+              'deep neural network', 'debug neural networks', 'performance hacking',
+              'tensorflow', 'tf'],
     license='Apache License 2.0',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
