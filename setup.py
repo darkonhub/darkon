@@ -15,7 +15,7 @@ setup(
     long_description=parse_from_file('README.md', encoding='utf-8'),
     author=info['authors'],
     url=info['github_url'],
-    download_url='{}/tarball/{}'.format(info['github_url'], info['version']),
+    download_url='{}/tarball/v{}'.format(info['github_url'], info['version']),
     keywords=['AI', 'ML', 'DL', 'deep learning', 'machine learning', 'neural network',
               'deep neural network', 'debug neural networks', 'performance hacking',
               'tensorflow', 'tf'],

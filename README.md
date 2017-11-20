@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/darkonhub/darkon.svg?branch=master)](https://travis-ci.org/darkonhub/darkon)
 [![codecov](https://codecov.io/gh/darkonhub/darkon/branch/master/graph/badge.svg)](https://codecov.io/gh/darkonhub/darkon)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![PyPI](https://img.shields.io/pypi/v/darkon.svg?style=flat-square)]()
+[![PyPI](https://img.shields.io/pypi/v/darkon.svg?style=flat-square)](https://pypi.python.org/pypi/darkon)
 [![Gitter](https://badges.gitter.im/darkonhub/darkon.svg)](https://gitter.im/darkonhub/darkon?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/077f07f7a52b4d8186beee724ed19231)](https://www.codacy.com/app/zironycho/darkon?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=darkonhub/darkon&amp;utm_campaign=Badge_Grade)
 
@@ -61,8 +61,7 @@ scores = inspector.upweighting_influence_batch(sess,
 ## Communication
 - [Issues](https://github.com/darkonhub/darkon/issues): report issues, bugs, and request new features
 - [Pull request](https://github.com/darkonhub/darkon/pulls)
-- News: ~~link twitter account~~
-- Discuss: [![Gitter](https://badges.gitter.im/darkonhub/darkon.svg)](https://gitter.im/darkonhub/darkon?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+- Discuss: [Gitter](https://gitter.im/darkonhub/darkon?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 - Email: [darkon@neosapience.com](mailto:darkon@neosapience.com) 
 
 ## Authors
