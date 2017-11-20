@@ -124,7 +124,10 @@ html_theme_options = {
     'github_repo': 'darkon',
     'github_button': True,
     'github_type': 'star',
-    'analytics_id': 'UA-109936098-1'
+    'github_banner': True,
+    'analytics_id': 'UA-109936098-1',
+    'description': 'Performance hacking for your deep learning models',
+    'code_font_family': ('monaco', 'Consolas', 'Menlo', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', 'monospace'),
 }
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -214,3 +217,4 @@ intersphinx_mapping = {
 
 highlight_language = 'python'
 add_module_names = False
+
