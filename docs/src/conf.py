@@ -16,9 +16,10 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-#import os
-#import sys
-#sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+pkg_root = os.path.abspath('../../')
+sys.path.insert(0, pkg_root)
 import json
 
 # -- General configuration ------------------------------------------------
@@ -66,7 +67,7 @@ source_suffix = ['.rst', '.md']
 # The master toctree document.
 master_doc = 'index'
 
-info = json.load(open('../../info.json'))
+info = json.load(open(os.path.join(pkg_root, 'info.json')))
 
 # General information about the project.
 project = info['name']
@@ -92,7 +93,12 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'README.md']
+exclude_patterns = [
+    '_build',
+    'Thumbs.db',
+    '.DS_Store',
+    'README.md'
+]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -205,3 +211,6 @@ intersphinx_mapping = {
     'numpy': ('http://docs.scipy.org/doc/numpy/', None),
 }
 
+
+highlight_language = 'python'
+add_module_names = False
