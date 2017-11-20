@@ -1,3 +1,4 @@
+-rrequirements.txt
 sphinx
 sphinx-autobuild
 m2r
