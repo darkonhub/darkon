@@ -7,12 +7,13 @@
 Darkon Documentation
 ====================
 
-.. mdinclude:: ../../README.md
+.. include:: about.rst
 
 .. toctree::
     :maxdepth: 4
     :hidden:
     :glob:
 
-    api
+    about
+    api/index
     version

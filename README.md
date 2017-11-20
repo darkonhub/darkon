@@ -54,9 +54,11 @@ scores = inspector.upweighting_influence_batch(sess,
 
 ```
 
-## Examples / Getting Started 
+## Examples 
 - [Examples](https://github.com/darkonhub/darkon-examples) 
-- [Documentation](http://darkon.io)
+
+## API Documentation
+- [Documentation](http://darkon.io/api)
 
 ## Communication
 - [Issues](https://github.com/darkonhub/darkon/issues): report issues, bugs, and request new features
