@@ -214,3 +214,14 @@ class TestInfluence(unittest.TestCase):
         test_indices = [0]
         self.insp.ihvp_config.update(scale=1)
         self.assertNotEqual(inv_hvp_filename, self.insp._approx_filename(self.sess, test_indices))
+
+    def test_approx_filename_for_weight(self):
+        test_indices = [0]
+
+        filename_1 = self.insp._approx_filename(self.sess, test_indices)
+        filename_2 = self.insp._approx_filename(self.sess, test_indices)
+        self.assertEqual(filename_1, filename_2)
+
+        self.sess.run(tf.global_variables_initializer())
+        filename_3 = self.insp._approx_filename(self.sess, test_indices)
+        self.assertNotEqual(filename_1, filename_3)
