@@ -117,7 +117,8 @@ html_theme_options = {
     'github_user': 'darkonhub',
     'github_repo': 'darkon',
     'github_button': True,
-    'github_type': 'star'
+    'github_type': 'star',
+    'analygtics_id': 'UA-109936098-1'
 }
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
