@@ -105,5 +105,3 @@ cifar-10-batches-py/
 *.tar.gz
 tmp/
 
-docs/src/darkon.*
-docs/src/modules.rst
