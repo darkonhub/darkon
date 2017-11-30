@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="/brand/logo.png"><br><br>
+    <img src="/brand/logo.png" width="400"><br><br>
 </div>
 
 [![Build Status](https://travis-ci.org/darkonhub/darkon.svg?branch=master)](https://travis-ci.org/darkonhub/darkon)
