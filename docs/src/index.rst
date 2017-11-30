@@ -16,4 +16,5 @@ Darkon Documentation
 
     about
     api/index
+    example
     version
