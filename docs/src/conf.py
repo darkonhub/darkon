@@ -119,7 +119,7 @@ html_theme = 'alabaster'
 # documentation.
 #
 html_theme_options = {
-    # 'logo': 'logo.png',
+    'logo': 'logo.png',
     'github_user': 'darkonhub',
     'github_repo': 'darkon',
     'github_button': True,
