@@ -128,6 +128,7 @@ html_theme_options = {
     'analytics_id': 'UA-109936098-1',
     'description': 'Performance hacking for your deep learning models',
     'code_font_family': ('monaco', 'Consolas', 'Menlo', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', 'monospace'),
+    'fixed_sidebar': True,
 }
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
