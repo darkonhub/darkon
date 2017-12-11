@@ -75,6 +75,12 @@ class TestInfluence(unittest.TestCase):
 
         x, y, cross_entropy = nn_graph()
 
+        # open session
+        self.sess = tf.InteractiveSession()
+        saver = tf.train.Saver()
+        saver.restore(self.sess, tf.train.latest_checkpoint('test/data'))
+
+        self.graph_origin = tf.get_default_graph().as_graph_def()
         # initialize influence function
         self.insp = darkon.Influence(workspace='./tmp',
                                      feeder=MyFeeder(),
@@ -82,10 +88,6 @@ class TestInfluence(unittest.TestCase):
                                      loss_op_test=cross_entropy,
                                      x_placeholder=x,
                                      y_placeholder=y)
-        # open session
-        self.sess = tf.InteractiveSession()
-        saver = tf.train.Saver()
-        saver.restore(self.sess, tf.train.latest_checkpoint('test/data'))
 
     def tearDown(self):
         self.sess.close()
@@ -225,3 +227,35 @@ class TestInfluence(unittest.TestCase):
         self.sess.run(tf.global_variables_initializer())
         filename_3 = self.insp._approx_filename(self.sess, test_indices)
         self.assertNotEqual(filename_1, filename_3)
+
+    def test_graph_dangling(self):
+        test_indices = [0]
+        approx_params = {'scale': 10,
+                         'num_repeats': 3,
+                         'recursion_depth': 2,
+                         'recursion_batch_size': _batch_size}
+
+        graph_influence_init = tf.get_default_graph().as_graph_def()
+        self.assertNotEqual(self.graph_origin, graph_influence_init)
+
+        self.insp.upweighting_influence(self.sess,
+                                        test_indices=test_indices,
+                                        test_batch_size=_batch_size,
+                                        approx_params=approx_params,
+                                        train_indices=[0],
+                                        num_total_train_example=_num_train_data,
+                                        force_refresh=True)
+
+        graph_first_executed = tf.get_default_graph().as_graph_def()
+        self.assertEqual(graph_influence_init, graph_first_executed)
+
+        self.insp.upweighting_influence(self.sess,
+                                        test_indices=test_indices,
+                                        test_batch_size=_batch_size,
+                                        approx_params=approx_params,
+                                        train_indices=[0],
+                                        num_total_train_example=_num_train_data,
+                                        force_refresh=True)
+
+        graph_second_executed = tf.get_default_graph().as_graph_def()
+        self.assertEqual(graph_first_executed, graph_second_executed)

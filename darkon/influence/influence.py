@@ -98,10 +98,30 @@ class Influence:
         self.grad_op_train = tf.gradients(loss_op_train, trainable_variables)
         self.grad_op_test = tf.gradients(loss_op_test, trainable_variables)
 
-        self.v_placeholder = [tf.placeholder(tf.float32, shape=a.get_shape()) for a in trainable_variables]
-        self.hessian_vector_op = _hessian_vector_product(loss_op_train, trainable_variables, self.v_placeholder)
+        self.v_cur_estimated = [tf.placeholder(tf.float32, shape=a.get_shape()) for a in trainable_variables]
+        self.v_test_grad = [tf.placeholder(tf.float32, shape=a.get_shape()) for a in trainable_variables]
+        self.v_ihvp = tf.placeholder(tf.float64, shape=[None])
+        self.v_param_damping = tf.placeholder(tf.float32)
+        self.v_param_scale = tf.placeholder(tf.float32)
+        self.v_param_total_trainset = tf.placeholder(tf.float64)
+
         self.inverse_hvp = None
         self.trainable_variables = trainable_variables
+
+        with tf.name_scope('darkon_ihvp'):
+            self.hessian_vector_op = _hessian_vector_product(loss_op_train, trainable_variables, self.v_cur_estimated)
+            self.estimation_op = [
+                a + (b * self.v_param_damping) - (c / self.v_param_scale)
+                for a, b, c in zip(self.v_test_grad, self.v_cur_estimated, self.hessian_vector_op)
+            ]
+
+        with tf.name_scope('darkon_grad_diff'):
+            flatten_inverse_hvp = tf.reshape(self.v_ihvp, shape=(-1, 1))
+            flatten_grads = tf.concat([tf.reshape(a, (-1,)) for a in self.grad_op_train], 0)
+            flatten_grads = tf.reshape(flatten_grads, shape=(1, -1,))
+            flatten_grads = tf.cast(flatten_grads, tf.float64)
+            flatten_grads /= self.v_param_total_trainset
+            self.grad_diff_op = tf.matmul(flatten_grads, flatten_inverse_hvp)
 
         self.ihvp_config = {
             'scale': 1e4,
@@ -281,30 +301,31 @@ class Influence:
         sha.update(json.dumps(self.ihvp_config, sort_keys=True).encode('utf-8'))
         return 'ihvp.' + sha.hexdigest() + '.npz'
 
-    def _get_inverse_hvp_lissa(self, sess, v):
+    def _get_inverse_hvp_lissa(self, sess, test_grad_loss):
         ihvp_config = self.ihvp_config
         print_iter = ihvp_config['recursion_depth'] / 10
 
-        if _using_fully_tf:
-            estimation_op = self._estimation_op(v)
-
         inverse_hvp = None
         for sample_idx in range(ihvp_config['num_repeats']):
-            cur_estimate = v
+            cur_estimate = test_grad_loss
             # debug_diffs_estimation = []
             # prev_estimation_norm = np.linalg.norm(np.concatenate([a.reshape(-1) for a in cur_estimate]))
 
             for j in range(ihvp_config['recursion_depth']):
                 train_batch_data, train_batch_label = self.feeder.train_batch(ihvp_config['recursion_batch_size'])
                 feed_dict = self._make_train_feed_dict(train_batch_data, train_batch_label)
-                feed_dict = self._update_feed_dict(feed_dict, cur_estimate)
+                feed_dict = self._update_feed_dict(feed_dict, cur_estimate, test_grad_loss)
 
                 if _using_fully_tf:
-                    cur_estimate = sess.run(estimation_op, feed_dict=feed_dict)
+                    feed_dict.update({
+                        self.v_param_damping: 1 - self.ihvp_config['damping'],
+                        self.v_param_scale: self.ihvp_config['scale']
+                    })
+                    cur_estimate = sess.run(self.estimation_op, feed_dict=feed_dict)
                 else:
                     hessian_vector_val = sess.run(self.hessian_vector_op, feed_dict=feed_dict)
                     hessian_vector_val = np.array(hessian_vector_val)
-                    cur_estimate = v + (1 - ihvp_config['damping']) * cur_estimate - hessian_vector_val / ihvp_config['scale']
+                    cur_estimate = test_grad_loss + (1 - ihvp_config['damping']) * cur_estimate - hessian_vector_val / ihvp_config['scale']
 
                 # curr_estimation_norm = np.linalg.norm(np.concatenate([a.reshape(-1) for a in cur_estimate]))
                 # debug_diffs_estimation.append(curr_estimation_norm - prev_estimation_norm)
@@ -324,24 +345,17 @@ class Influence:
         inverse_hvp /= ihvp_config['num_repeats']
         return inverse_hvp
 
-    def _estimation_op(self, v):
-        v_const = [tf.constant(a, dtype=tf.float32, shape=a.shape) for a in v]
-        damping = 1 - self.ihvp_config['damping']
-        scale = self.ihvp_config['scale']
-        return [
-            a + (b * damping) - (c / scale)
-            for a, b, c in zip(v_const, self.v_placeholder, self.hessian_vector_op)
-        ]
+    def _update_feed_dict(self, feed_dict, cur_estimated, test_grad_loss):
+        for placeholder, var in zip(self.v_cur_estimated, cur_estimated):
+            feed_dict[placeholder] = var
 
-    def _update_feed_dict(self, feed_dict, variables):
-        for placeholder, variable in zip(self.v_placeholder, variables):
-            feed_dict[placeholder] = variable
+        for placeholder, var in zip(self.v_test_grad, test_grad_loss):
+            feed_dict[placeholder] = var
         return feed_dict
 
     @_timing
     def _grad_diffs(self, sess, train_indices, num_total_train_example):
         inverse_hvp = np.concatenate([a.reshape(-1) for a in self.inverse_hvp])
-        grad_diff_op = self._grad_diff_op(num_total_train_example)
 
         num_to_remove = len(train_indices)
         predicted_grad_diffs = np.zeros([num_to_remove])
@@ -349,8 +363,7 @@ class Influence:
         for counter, idx_to_remove in enumerate(train_indices):
             single_data, single_label = self.feeder.train_one(idx_to_remove)
             feed_dict = self._make_train_feed_dict([single_data], [single_label])
-            predicted_grad_diffs[counter] = self._grad_diff(sess, feed_dict, num_total_train_example, grad_diff_op,
-                                                            inverse_hvp)
+            predicted_grad_diffs[counter] = self._grad_diff(sess, feed_dict, num_total_train_example, inverse_hvp)
 
             if (counter % 1000) == 0:
                 logger.info('counter: {} / {}'.format(counter, num_to_remove))
@@ -366,7 +379,6 @@ class Influence:
             num_diffs = num_iters * train_batch_size
 
         inverse_hvp = np.concatenate([a.reshape(-1) for a in self.inverse_hvp])
-        grad_diff_op = self._grad_diff_op(num_total_train_example)
         predicted_grad_diffs = np.zeros([num_diffs])
 
         counter = 0
@@ -376,14 +388,12 @@ class Influence:
             if num_subsampling > 0:
                 for idx in range(num_subsampling):
                     feed_dict = self._make_train_feed_dict(train_batch_data[idx:idx + 1], train_batch_label[idx:idx + 1])
-                    predicted_grad_diffs[counter] = self._grad_diff(sess, feed_dict, num_total_train_example,
-                                                                    grad_diff_op, inverse_hvp)
+                    predicted_grad_diffs[counter] = self._grad_diff(sess, feed_dict, num_total_train_example, inverse_hvp)
                     counter += 1
             else:
                 for single_data, single_label in zip(train_batch_data, train_batch_label):
                     feed_dict = self._make_train_feed_dict([single_data], [single_label])
-                    predicted_grad_diffs[counter] = self._grad_diff(sess, feed_dict, num_total_train_example,
-                                                                    grad_diff_op, inverse_hvp)
+                    predicted_grad_diffs[counter] = self._grad_diff(sess, feed_dict, num_total_train_example, inverse_hvp)
                     counter += 1
 
             if (it % 100) == 0:
@@ -391,17 +401,13 @@ class Influence:
 
         return predicted_grad_diffs
 
-    def _grad_diff_op(self, num_train_example):
-        inverse_hvp = np.concatenate([a.reshape(-1) for a in self.inverse_hvp])
-        inverse_hvp_const = tf.reshape(tf.constant(inverse_hvp, dtype=tf.float64), shape=(-1, 1))
-        flatten_grads = tf.concat([tf.reshape(a, (-1,)) for a in self.grad_op_train], 0)
-        flatten_grads = tf.reshape(flatten_grads, shape=(1, -1,))
-        flatten_grads /= num_train_example
-        return tf.matmul(tf.cast(flatten_grads, tf.float64), inverse_hvp_const)
-
-    def _grad_diff(self, sess, feed_dict, num_total_train_example, loss_diff_op, inverse_hvp):
+    def _grad_diff(self, sess, feed_dict, num_total_train_example, inverse_hvp):
         if _using_fully_tf:
-            return sess.run(loss_diff_op, feed_dict=feed_dict)
+            feed_dict.update({
+                self.v_ihvp: inverse_hvp,
+                self.v_param_total_trainset: num_total_train_example
+            })
+            return sess.run(self.grad_diff_op, feed_dict=feed_dict)
         else:
             train_grads = sess.run(self.grad_op_train, feed_dict=feed_dict)
             train_grads = np.concatenate([a.reshape(-1) for a in train_grads])
