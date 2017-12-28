@@ -52,6 +52,12 @@ It can be used for prioritize potential mislabeled examples to be fixed, and deb
 We will gradually enable technologies to analyze deep learning models easily applicable to your existing projects.
 More features will be released soon. Feedback and feature request are always welcome, which help us to manage priorities. Please keep your eyes on **Darkon**. 
 
+Demo
+----
+
+
+* `Demo page <https://darkon-demo.herokuapp.com>`_ 
+
 Dependencies
 ------------
 
