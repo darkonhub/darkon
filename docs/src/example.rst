@@ -29,4 +29,4 @@ Used ImageNet, ResNet
 
 - `Gradcam & Guided Gradcam`_
 
-.. _`Gradcam & Guided Gradcam`: http://nbviewer.jupyter.org/github/darkonhub/darkon-examples/blob/master/gradcam/example_file_in_here.ipynb
+.. _`Gradcam & Guided Gradcam`: http://nbviewer.jupyter.org/github/darkonhub/darkon-examples/blob/master/gradcam/GradcamDemo.ipynb
