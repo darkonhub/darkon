@@ -33,5 +33,9 @@ setup(
         'Topic :: Software Development :: Debuggers',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],
-    install_requires=deps
+    install_requires=deps,
+    extras_require={
+        'tensorflow-gpu':  ['tensorflow-gpu>=1.3'],
+        'tensorflow': ['tensorflow>=1.3']
+    }
 )
