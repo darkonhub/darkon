@@ -2,3 +2,4 @@
 sphinx
 sphinx-autobuild
 m2r
+tensorflow

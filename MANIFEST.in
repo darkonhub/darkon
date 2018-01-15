@@ -1,4 +1,4 @@
-include README.md
+include setup.rst
 include LICENSE
 include requirements.txt
 include info.json

@@ -56,8 +56,7 @@ More features will be released soon. Feedback and feature request are always wel
 Demo
 ----
 
-
-* `Demo page <https://darkon-demo.herokuapp.com>`_ 
+`Demo Page <https://darkon-demo.herokuapp.com>`_
 
 Dependencies
 ------------
@@ -103,7 +102,7 @@ Authors
 License
 -------
 
-**Apache License 2.0**
+Apache License 2.0
 
 References
 ----------
