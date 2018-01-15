@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ========================================================================
-from .influence.influence import Influence  # noqa: ignore=F401
-from .influence.influence import InfluenceFeeder  # noqa: ignore=F401
-from .gradcam.gradcam import Gradcam  # noqa: ignore=F401
+from . import gradcam
+# from . import guided_grad
+# from . import extract_ops
 
-__all__ = ["influence", "gradcam"]
+__all__ = ["gradcam"]

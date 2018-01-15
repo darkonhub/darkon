@@ -19,9 +19,10 @@ is enough to use the model for commercial products. However, well-performing mod
 to be fixed. Moreover, it is necessary to explain the result to trust the system in some applications such as medical diagnosis, financial decisions, etc. We hope  
 **Darkon** can help you to understand the trained models, which could be used to debug failures, interpret decisions, and so on. 
 
-In this first release, we provide influence score calculation easily applicable to any Tensorflow models (other models to be supported later).
-The score can be used for filtering bad training samples that affects test performance negatively. 
-It can be used for prioritize potential mislabeled examples to be fixed, and debugging distribution mismatch between train and test samples.
+Here, we provide functions to analyze deep learning model decisions easily applicable to any Tensorflow models (other models to be supported later).
+Influence score can be useful to understand the model through training samples. The score can be used for filtering bad training samples that affects test performance negatively. 
+It is useful to prioritize potential mislabeled examples to be fixed, and debug distribution mismatch between train and test samples.
+In this version, we have added Grad-CAM and Guided Grad-CAM, which are useful to understand decisions of CNN models. 
 
 We will gradually enable technologies to analyze deep learning models easily applicable to your existing projects.
 More features will be released soon. Feedback and feature request are always welcome, which help us to manage priorities. Please keep your eyes on **Darkon**. 
@@ -30,26 +31,17 @@ More features will be released soon. Feedback and feature request are always wel
 - [Tensorflow](https://github.com/tensorflow/tensorflow)>=1.3.0
 
 ## Installation
+Install Darkon alone
 ```bash
 pip install darkon
 ```
-
-## Usage
-```python
-inspector = darkon.Influence(workspace_path,
-                             YourDataFeeder(),
-                             loss_op_train,
-                             loss_op_test,
-                             x_placeholder,
-                             y_placeholder)
-                             
-scores = inspector.upweighting_influence_batch(sess,
-                                               test_indices,
-                                               test_batch_size,
-                                               approx_params,
-                                               train_batch_size,
-                                               train_iterations)
-
+Install with TensorFlow CPU
+```bash
+pip install darkon[tensorflow]
+```
+Install with TensorFlow GPU
+```bash
+pip install darkon[tensorflow-gpu]
 ```
 
 ## Examples 
@@ -78,3 +70,6 @@ scores = inspector.upweighting_influence_batch(sess,
 [3] Pearlmutter, B. A. "[Fast exact multiplication by the hessian](http://www.bcl.hamilton.ie/~barak/papers/nc-hessian.pdf)" Neural Computation, 1994
 
 [4] Agarwal, N., Bullins, B., and Hazan, E. "[Second order stochastic optimization in linear time](https://arxiv.org/abs/1602.03943)" arXiv preprint arXiv:1602.03943
+
+[5] Ramprasaath R. Selvaraju, Michael Cogswell, Abhishek Das, Ramakrishna Vedantam, Devi Parikh, Dhruv Batra "[Grad-CAM: Visual Explanations from Deep Networks via Gradient-based Localization](https://arxiv.org/abs/1610.02391)" ICCV2017
+
