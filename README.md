@@ -28,7 +28,7 @@ We will gradually enable technologies to analyze deep learning models easily app
 More features will be released soon. Feedback and feature request are always welcome, which help us to manage priorities. Please keep your eyes on **Darkon**. 
 
 ## Demo 
-- [Demo page](https://darkon-demo.herokuapp.com) 
+[Demo Page](https://darkon-demo.herokuapp.com)
 
 ## Dependencies
 - [Tensorflow](https://github.com/tensorflow/tensorflow)>=1.3.0
@@ -48,7 +48,7 @@ pip install darkon[tensorflow-gpu]
 ```
 
 ## Examples 
-- [Examples](https://github.com/darkonhub/darkon-examples) 
+- [Examples](https://github.com/darkonhub/darkon-examples/blob/master/README.md) 
 
 ## API Documentation
 - [Documentation](http://darkon.io/api)
@@ -63,9 +63,10 @@ pip install darkon[tensorflow-gpu]
 [Neosapience, Inc.](http://www.neosapience.com)
 
 ## License
-**Apache License 2.0**
+Apache License 2.0
 
 ## References
+
 [1] Cook, R. D. and Weisberg, S. "[Residuals and influence in regression](https://www.casact.org/pubs/proceed/proceed94/94123.pdf)", New York: Chapman and Hall, 1982
 
 [2] Koh, P. W. and Liang, P. "[Understanding Black-box Predictions via Influence Functions](https://arxiv.org/abs/1703.04730)" ICML2017
@@ -75,4 +76,3 @@ pip install darkon[tensorflow-gpu]
 [4] Agarwal, N., Bullins, B., and Hazan, E. "[Second order stochastic optimization in linear time](https://arxiv.org/abs/1602.03943)" arXiv preprint arXiv:1602.03943
 
 [5] Ramprasaath R. Selvaraju, Michael Cogswell, Abhishek Das, Ramakrishna Vedantam, Devi Parikh, Dhruv Batra "[Grad-CAM: Visual Explanations from Deep Networks via Gradient-based Localization](https://arxiv.org/abs/1610.02391)" ICCV2017
-

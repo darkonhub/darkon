@@ -6,6 +6,7 @@ Version      Link
 ===========  =============================================
 All History  https://github.com/darkonhub/darkon/releases
 Latest       https://github.com/darkonhub/darkon/releases/latest
+0.0.5        https://github.com/darkonhub/darkon/releases/tag/v0.0.5
 0.0.4        https://github.com/darkonhub/darkon/releases/tag/v0.0.4
 0.0.3        https://github.com/darkonhub/darkon/releases/tag/v0.0.3
 0.0.2        https://github.com/darkonhub/darkon/releases/tag/v0.0.2

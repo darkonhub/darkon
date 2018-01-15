@@ -1,5 +1,4 @@
 from setuptools import setup, find_packages
-from m2r import parse_from_file
 import json
 
 
@@ -12,7 +11,7 @@ setup(
     packages=find_packages('.'),
     version=info['version'],
     description='Performance hacking for your deep learning models',
-    long_description=parse_from_file('README.md', encoding='utf-8'),
+    long_description=open('setup.rst').read(),
     author=info['authors'],
     url=info['github_url'],
     download_url='{}/tarball/v{}'.format(info['github_url'], info['version']),
