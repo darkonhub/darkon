@@ -126,7 +126,7 @@ html_theme_options = {
     'github_type': 'star',
     'github_banner': True,
     'analytics_id': 'UA-109936098-1',
-    'description': 'Performance hacking for your deep learning models',
+    'description': 'Toolkit to Hack Your Deep Learning Models.',
     'code_font_family': ('monaco', 'Consolas', 'Menlo', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', 'monospace'),
     'fixed_sidebar': True,
 }
