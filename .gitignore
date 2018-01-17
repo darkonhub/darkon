@@ -105,3 +105,4 @@ cifar-10-batches-py/
 *.tar.gz
 tmp/
 *.ckpt
+test/data/sequence/
