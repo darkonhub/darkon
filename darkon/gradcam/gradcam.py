@@ -27,6 +27,7 @@ from __future__ import unicode_literals
 import numpy as np
 import tensorflow as tf
 import cv2
+from skimage.transform import resize
 
 from .guided_grad import replace_grad_to_guided_grad
 from .candidate_ops import candidate_featuremap_op_names, candidate_predict_op_names
@@ -132,6 +133,7 @@ class Gradcam:
         if input_data.ndim == 2:
             is_image = False
             input_feed = input_data
+            input_length = input_data.shape[1]
         
         if target_index is not None:
             feed_dict = {self._x_placeholder: input_feed, self._class_idx: target_index}
@@ -144,21 +146,25 @@ class Gradcam:
 
         weights = np.mean(grad_eval, axis=(0, 1, 2))
         conv_out_eval = np.squeeze(conv_out_eval, axis=0)
-        cam = np.ones(conv_out_eval.shape[:2], dtype=np.float32)
+        cam = np.zeros(conv_out_eval.shape[:2], dtype=np.float32)
         
         for i, w in enumerate(weights):
             cam += w * conv_out_eval[:, :, i]
         
         if is_image:
+            cam += 1
             cam = cv2.resize(cam, (image_height, image_width))
-            cam = np.maximum(cam, 0)
-            
             saliency_val = sess.run(self._saliency_map, feed_dict={self._x_placeholder: input_feed})
             saliency_val = np.squeeze(saliency_val, axis=0)
-
+        else:
+            cam = resize(cam, (input_length, 1), preserve_range=True)
+            cam = np.transpose(cam)
+            
+        cam = np.maximum(cam, 0)    
         heatmap = cam / np.max(cam)
+        
         ret = {'heatmap': heatmap}
-          
+        
         if is_image:
             ret.update({
                 'gradcam_img': self.overlay_gradcam(input_data, heatmap),

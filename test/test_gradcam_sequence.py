@@ -15,10 +15,8 @@
 import unittest
 
 import darkon
-import os
 import tensorflow as tf
 import numpy as np
-import tensorflow.contrib.slim as slim
 from tensorflow.contrib import learn
 
 class TestGradcamSequence(unittest.TestCase):
@@ -31,27 +29,25 @@ class TestGradcamSequence(unittest.TestCase):
         self.y_test = [[1.0, 0.0]]
         
     def test_text(self):
-        with tf.Session() as sess:
-            # Load the saved meta graph and restore variables
-            checkpoint_file = "test/data/sequence/model-15000"
-            saver = tf.train.import_meta_graph("{}.meta".format(checkpoint_file))
-            saver.restore(sess, checkpoint_file)
-            graph = tf.get_default_graph()   
-            input_x = graph.get_operation_by_name("input_x").outputs[0]
-            dropout_keep_prob = graph.get_operation_by_name("dropout_keep_prob").outputs[0]
-            input_y = graph.get_operation_by_name("input_y").outputs[0]
-            
-            conv_op_names = darkon.Gradcam.candidate_featuremap_op_names(sess, 
-                feed_options={input_x: self.x_test, input_y: self.y_test ,dropout_keep_prob:1.0})
+        sess = tf.InteractiveSession()
+        checkpoint_file = "test/data/sequence/model-15000"
+        saver = tf.train.import_meta_graph("{}.meta".format(checkpoint_file))
+        saver.restore(sess, checkpoint_file)
+        graph = tf.get_default_graph()   
+        input_x = graph.get_operation_by_name("input_x").outputs[0]
+        dropout_keep_prob = graph.get_operation_by_name("dropout_keep_prob").outputs[0]
+        input_y = graph.get_operation_by_name("input_y").outputs[0]
+
+        conv_op_names = darkon.Gradcam.candidate_featuremap_op_names(sess, 
+            feed_options={input_x: self.x_test, input_y: self.y_test ,dropout_keep_prob:1.0})
                 
-            prob_op_names = darkon.Gradcam.candidate_predict_op_names(sess, 2, 
-                feed_options={input_x: self.x_test, input_y: self.y_test ,dropout_keep_prob:1.0})
+        prob_op_names = darkon.Gradcam.candidate_predict_op_names(sess, 2, 
+            feed_options={input_x: self.x_test, input_y: self.y_test ,dropout_keep_prob:1.0})
+        
+        conv_name = conv_op_names[-7]
+        prob_name = prob_op_names[-1]
+        self.assertEqual(conv_name, "conv-maxpool-3/relu")
+        self.assertEqual(prob_name, "output/scores")
             
-            conv_name = conv_op_names[-7]
-            prob_name = prob_op_names[-1]
-            self.assertEqual(conv_name, "conv-maxpool-3/relu")
-            self.assertEqual(prob_name, "output/scores")
-            
-            insp = darkon.Gradcam(input_x, 2, conv_name, prob_name, graph=graph)
-            ret = insp.gradcam(sess, self.x_test, feed_options={dropout_keep_prob: 1})
-            
+        insp = darkon.Gradcam(input_x, 2, conv_name, prob_name, graph=graph)
+        ret = insp.gradcam(sess, self.x_test, feed_options={dropout_keep_prob: 1})
