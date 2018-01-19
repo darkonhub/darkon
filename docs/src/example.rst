@@ -9,12 +9,10 @@ All of examples in `here`_
 
 darkon.Influence
 ----------------
-Used Cifar-10, ResNet
+Cifar-10, ResNet
 
 - `Upweighting Influence`_
-
 - `Mislabel detection with all of layers`_
-
 - `Mislabel detection with one top layer`_
 
 .. _`Upweighting Influence`: http://nbviewer.jupyter.org/github/darkonhub/darkon-examples/blob/master/cifar10-resnet/influence_cifar10_resnet.ipynb
@@ -25,8 +23,15 @@ Used Cifar-10, ResNet
 
 darkon.Gradcam
 --------------
-Used ImageNet, ResNet
+ImageNet, ResNet
 
-- `Gradcam & Guided Gradcam`_
+- `Gradcam & Guided Gradcam for image`_
 
-.. _`Gradcam & Guided Gradcam`: http://nbviewer.jupyter.org/github/darkonhub/darkon-examples/blob/master/gradcam/GradcamDemo.ipynb
+Sentence polarity dataset, cnn text classification 
+
+- `Heatmap for text`_
+
+.. _`Gradcam & Guided Gradcam for image`: http://nbviewer.jupyter.org/github/darkonhub/darkon-examples/blob/master/gradcam/GradcamDemo.ipynb
+
+.. _`Heatmap for text`: http://nbviewer.jupyter.org/github/darkonhub/darkon-examples/blob/master/gradcam/GradcamDemoSequence.ipynb
+

@@ -306,7 +306,7 @@ class Influence:
         print_iter = ihvp_config['recursion_depth'] / 10
 
         inverse_hvp = None
-        for sample_idx in range(ihvp_config['num_repeats']):
+        for _ in range(ihvp_config['num_repeats']):
             cur_estimate = test_grad_loss
             # debug_diffs_estimation = []
             # prev_estimation_norm = np.linalg.norm(np.concatenate([a.reshape(-1) for a in cur_estimate]))

@@ -171,7 +171,7 @@ class Gradcam:
         return ret
 
     @staticmethod
-    def candidate_featuremap_op_names(sess, graph=None, feed_options=dict()):
+    def candidate_featuremap_op_names(sess, graph=None, feed_options=None):
         """ Returns the list of candidates for operation names of CNN feature map layer
 
         Parameters
@@ -189,10 +189,11 @@ class Gradcam:
 
         """
         graph = graph if graph is not None else tf.get_default_graph()
+        feed_options = feed_options if feed_options is not None else {}
         return candidate_featuremap_op_names(sess, graph, feed_options)
 
     @staticmethod
-    def candidate_predict_op_names(sess, num_classes, graph=None, feed_options=dict()):
+    def candidate_predict_op_names(sess, num_classes, graph=None, feed_options=None):
         """ Returns the list of candidate for operation names of prediction layer
 
         Parameters
@@ -212,6 +213,7 @@ class Gradcam:
 
         """
         graph = graph if graph is not None else tf.get_default_graph()
+        feed_options = feed_options if feed_options is not None else {}
         return candidate_predict_op_names(sess, num_classes, graph, feed_options)
 
     @staticmethod
