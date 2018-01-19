@@ -16,15 +16,15 @@ import tensorflow as tf
 import numpy as np
 
 _unusable_op_names = (
-    'Shape', 
-    'Reshape', 
-    'Slice', 
-    'Pack', 
-    'Cast', 
-    'ConcatV2', 
-    'Const', 
-    'Identity', 
-    'ZerosLike', 
+    'Shape',
+    'Reshape',
+    'Slice',
+    'Pack',
+    'Cast',
+    'ConcatV2',
+    'Const',
+    'Identity',
+    'ZerosLike',
     'Assign',
     'VariableV2')
 
@@ -60,7 +60,7 @@ def candidate_featuremap_op_names(sess, graph, feed_options):
     for out_rank, out_shape, op in zip(out_ranks_val, out_shapes_val, operations):
         if out_rank != 4 or (out_shape[1] == 1 and out_shape[2] == 1) or out_shape[0] != 1:
             continue
-            
+
         ret.append(op.name)
     return ret
 
@@ -86,6 +86,6 @@ def candidate_predict_op_names(sess, num_classes, graph, feed_options):
             continue
         if np.prod(out_shape) != num_classes:
             continue
-            
+
         ret.append(op.name)
     return ret

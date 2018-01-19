@@ -25,8 +25,8 @@ class TestGradcamSequence(unittest.TestCase):
         x_raw = ["a masterpiece of four years in the making"]
         vocab_path = "test/data/sequence/vocab"
         vocab_processor = learn.preprocessing.VocabularyProcessor.restore(vocab_path)
-        self.x_test = np.array(list(vocab_processor.transform(x_raw)))
-        self.y_test = [[1.0, 0.0]]
+        self.x_test_batch = np.array(list(vocab_processor.transform(x_raw)))
+        self.y_test_batch = [[1.0, 0.0]]
         
     def test_text(self):
         sess = tf.InteractiveSession()
@@ -39,10 +39,10 @@ class TestGradcamSequence(unittest.TestCase):
         input_y = graph.get_operation_by_name("input_y").outputs[0]
 
         conv_op_names = darkon.Gradcam.candidate_featuremap_op_names(sess, 
-            feed_options={input_x: self.x_test, input_y: self.y_test ,dropout_keep_prob:1.0})
+            feed_options={input_x: self.x_test_batch, input_y: self.y_test_batch ,dropout_keep_prob:1.0})
                 
         prob_op_names = darkon.Gradcam.candidate_predict_op_names(sess, 2, 
-            feed_options={input_x: self.x_test, input_y: self.y_test ,dropout_keep_prob:1.0})
+            feed_options={input_x: self.x_test_batch, input_y: self.y_test_batch ,dropout_keep_prob:1.0})
         
         conv_name = conv_op_names[-7]
         prob_name = prob_op_names[-1]
@@ -50,4 +50,4 @@ class TestGradcamSequence(unittest.TestCase):
         self.assertEqual(prob_name, "output/scores")
             
         insp = darkon.Gradcam(input_x, 2, conv_name, prob_name, graph=graph)
-        ret = insp.gradcam(sess, self.x_test, feed_options={dropout_keep_prob: 1})
+        ret = insp.gradcam(sess, self.x_test_batch[0], feed_options={dropout_keep_prob: 1})

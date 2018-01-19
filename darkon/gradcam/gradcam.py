@@ -27,7 +27,7 @@ from __future__ import unicode_literals
 import numpy as np
 import tensorflow as tf
 import cv2
-from skimage.transform import resize
+from skimage.transform import resize as skimage_resize
 
 from .guided_grad import replace_grad_to_guided_grad
 from .candidate_ops import candidate_featuremap_op_names, candidate_predict_op_names
@@ -109,7 +109,7 @@ class Gradcam:
             Target class index
             If None, predicted class index is used
         feed_options : dict
-            todo...
+            Optional parameters to graph
 
         Returns
         -------
@@ -124,47 +124,44 @@ class Gradcam:
             * guided_backprop: Guided backprop result
 
         """
-        #print(sess.run(tf.shape(self._target_ts)))
+        input_feed = np.expand_dims(input_data, axis=0)
         if input_data.ndim == 3:
             is_image = True
-            input_feed = np.expand_dims(input_data, axis=0)
             image_height, image_width = input_data.shape[:2]
-        # todo: included batch dim
-        if input_data.ndim == 2:
+        if input_data.ndim == 1:
             is_image = False
-            input_feed = input_data
-            input_length = input_data.shape[1]
-        
+            input_length = input_data.shape[0]
+
         if target_index is not None:
             feed_dict = {self._x_placeholder: input_feed, self._class_idx: target_index}
             feed_dict.update(feed_options)
-            conv_out_eval, grad_eval = sess.run([self._target_ts, self._grad_by_idx],feed_dict=feed_dict)
+            conv_out_eval, grad_eval = sess.run([self._target_ts, self._grad_by_idx], feed_dict=feed_dict)
         else:
             feed_dict = {self._x_placeholder: input_feed}
             feed_dict.update(feed_options)
-            conv_out_eval, grad_eval = sess.run([self._target_ts, self._grad_by_top1],feed_dict=feed_dict)
+            conv_out_eval, grad_eval = sess.run([self._target_ts, self._grad_by_top1], feed_dict=feed_dict)
 
         weights = np.mean(grad_eval, axis=(0, 1, 2))
         conv_out_eval = np.squeeze(conv_out_eval, axis=0)
         cam = np.zeros(conv_out_eval.shape[:2], dtype=np.float32)
-        
+
         for i, w in enumerate(weights):
             cam += w * conv_out_eval[:, :, i]
-        
+
         if is_image:
             cam += 1
             cam = cv2.resize(cam, (image_height, image_width))
             saliency_val = sess.run(self._saliency_map, feed_dict={self._x_placeholder: input_feed})
             saliency_val = np.squeeze(saliency_val, axis=0)
         else:
-            cam = resize(cam, (input_length, 1), preserve_range=True)
+            cam = skimage_resize(cam, (input_length, 1), preserve_range=True, mode='reflect')
             cam = np.transpose(cam)
-            
-        cam = np.maximum(cam, 0)    
+
+        cam = np.maximum(cam, 0)
         heatmap = cam / np.max(cam)
-        
+
         ret = {'heatmap': heatmap}
-        
+
         if is_image:
             ret.update({
                 'gradcam_img': self.overlay_gradcam(input_data, heatmap),
@@ -172,7 +169,6 @@ class Gradcam:
                 'guided_backprop': saliency_val
             })
         return ret
-        
 
     @staticmethod
     def candidate_featuremap_op_names(sess, graph=None, feed_options=dict()):
@@ -184,6 +180,8 @@ class Gradcam:
             Tensorflow session
         graph: tf.Graph
             Tensorflow graph
+        feed_options: dict
+            Optional parameters to graph
         Returns
         -------
         list
@@ -206,7 +204,7 @@ class Gradcam:
         graph: tf.Graph
             Tensorflow graph
         feed_options: dict
-            todo ...
+            Optional parameters to graph
         Returns
         -------
         list
