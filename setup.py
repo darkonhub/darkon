@@ -10,7 +10,7 @@ setup(
     name=info['name'],
     packages=find_packages('.'),
     version=info['version'],
-    description='Performance hacking for your deep learning models',
+    description='Toolkit to Hack Your Deep Learning Models',
     long_description=open('setup.rst').read(),
     author=info['authors'],
     url=info['github_url'],
