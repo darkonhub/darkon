@@ -103,6 +103,7 @@ ENV/
 *.swp
 cifar-10-batches-py/
 *.tar.gz
+*.tar
 tmp/
 *.ckpt
 test/data/sequence/
