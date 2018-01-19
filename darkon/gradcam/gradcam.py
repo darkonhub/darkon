@@ -27,6 +27,7 @@ from __future__ import unicode_literals
 import numpy as np
 import tensorflow as tf
 import cv2
+from skimage.transform import resize as skimage_resize
 
 from .guided_grad import replace_grad_to_guided_grad
 from .candidate_ops import candidate_featuremap_op_names, candidate_predict_op_names
@@ -76,10 +77,11 @@ class Gradcam:
     def __init__(self, x_placeholder, num_classes, featuremap_op_name, predict_op_name=None, graph=None):
         self._x_placeholder = x_placeholder
         graph = graph if graph is not None else tf.get_default_graph()
+        self.graph = graph
 
         predict_op_name = self._find_prob_layer(predict_op_name, graph)
-        self._prob_ts = graph.get_operation_by_name(predict_op_name).outputs
-        self._target_ts = graph.get_operation_by_name(featuremap_op_name).outputs
+        self._prob_ts = graph.get_operation_by_name(predict_op_name).outputs[0]
+        self._target_ts = graph.get_operation_by_name(featuremap_op_name).outputs[0]
 
         self._class_idx = tf.placeholder(tf.int32)
         top1 = tf.argmax(tf.reshape(self._prob_ts, [-1]))
@@ -91,10 +93,10 @@ class Gradcam:
 
         replace_grad_to_guided_grad(graph)
 
-        max_output = tf.reduce_max(self._target_ts, axis=3)
+        max_output = tf.reduce_max(self._target_ts, axis=2)
         self._saliency_map = tf.gradients(tf.reduce_sum(max_output), x_placeholder)[0]
 
-    def gradcam(self, sess, input_data, target_index=None):
+    def gradcam(self, sess, input_data, target_index=None, feed_options=dict()):
         """ Calculate Grad-CAM (class activation map) and Guided Grad-CAM for given input on target class
 
         Parameters
@@ -106,6 +108,8 @@ class Gradcam:
         target_index : int
             Target class index
             If None, predicted class index is used
+        feed_options : dict
+            Optional parameters to graph
 
         Returns
         -------
@@ -120,41 +124,54 @@ class Gradcam:
             * guided_backprop: Guided backprop result
 
         """
-
         input_feed = np.expand_dims(input_data, axis=0)
-        image_height, image_width = input_data.shape[:2]
+        if input_data.ndim == 3:
+            is_image = True
+            image_height, image_width = input_data.shape[:2]
+        if input_data.ndim == 1:
+            is_image = False
+            input_length = input_data.shape[0]
 
         if target_index is not None:
-            conv_out_eval, grad_eval = sess.run(
-                [self._target_ts, self._grad_by_idx],
-                feed_dict={self._x_placeholder: input_feed, self._class_idx: target_index})
+            feed_dict = {self._x_placeholder: input_feed, self._class_idx: target_index}
+            feed_dict.update(feed_options)
+            conv_out_eval, grad_eval = sess.run([self._target_ts, self._grad_by_idx], feed_dict=feed_dict)
         else:
-            conv_out_eval, grad_eval = sess.run(
-                [self._target_ts, self._grad_by_top1],
-                feed_dict={self._x_placeholder: input_feed})
+            feed_dict = {self._x_placeholder: input_feed}
+            feed_dict.update(feed_options)
+            conv_out_eval, grad_eval = sess.run([self._target_ts, self._grad_by_top1], feed_dict=feed_dict)
 
         weights = np.mean(grad_eval, axis=(0, 1, 2))
         conv_out_eval = np.squeeze(conv_out_eval, axis=0)
-        cam = np.ones(conv_out_eval.shape[:2], dtype=np.float32)
+        cam = np.zeros(conv_out_eval.shape[:2], dtype=np.float32)
 
         for i, w in enumerate(weights):
             cam += w * conv_out_eval[:, :, i]
-        cam = cv2.resize(cam, (image_height, image_width))
+
+        if is_image:
+            cam += 1
+            cam = cv2.resize(cam, (image_height, image_width))
+            saliency_val = sess.run(self._saliency_map, feed_dict={self._x_placeholder: input_feed})
+            saliency_val = np.squeeze(saliency_val, axis=0)
+        else:
+            cam = skimage_resize(cam, (input_length, 1), preserve_range=True, mode='reflect')
+            cam = np.transpose(cam)
+
         cam = np.maximum(cam, 0)
         heatmap = cam / np.max(cam)
 
-        saliency_val = sess.run(self._saliency_map, feed_dict={self._x_placeholder: input_feed})
-        saliency_val = np.squeeze(saliency_val, axis=0)
+        ret = {'heatmap': heatmap}
 
-        return {
-            'gradcam_img': self.overlay_gradcam(input_data, heatmap),
-            'guided_gradcam_img': _deprocess_image(saliency_val * heatmap[..., None]),
-            'heatmap': heatmap,
-            'guided_backprop': saliency_val
-        }
+        if is_image:
+            ret.update({
+                'gradcam_img': self.overlay_gradcam(input_data, heatmap),
+                'guided_gradcam_img': _deprocess_image(saliency_val * heatmap[..., None]),
+                'guided_backprop': saliency_val
+            })
+        return ret
 
     @staticmethod
-    def candidate_featuremap_op_names(sess, graph=None):
+    def candidate_featuremap_op_names(sess, graph=None, feed_options=dict()):
         """ Returns the list of candidates for operation names of CNN feature map layer
 
         Parameters
@@ -163,6 +180,8 @@ class Gradcam:
             Tensorflow session
         graph: tf.Graph
             Tensorflow graph
+        feed_options: dict
+            Optional parameters to graph
         Returns
         -------
         list
@@ -170,10 +189,10 @@ class Gradcam:
 
         """
         graph = graph if graph is not None else tf.get_default_graph()
-        return candidate_featuremap_op_names(sess, graph)
+        return candidate_featuremap_op_names(sess, graph, feed_options)
 
     @staticmethod
-    def candidate_predict_op_names(sess, num_classes, graph=None):
+    def candidate_predict_op_names(sess, num_classes, graph=None, feed_options=dict()):
         """ Returns the list of candidate for operation names of prediction layer
 
         Parameters
@@ -184,6 +203,8 @@ class Gradcam:
             Number of prediction classes
         graph: tf.Graph
             Tensorflow graph
+        feed_options: dict
+            Optional parameters to graph
         Returns
         -------
         list
@@ -191,7 +212,7 @@ class Gradcam:
 
         """
         graph = graph if graph is not None else tf.get_default_graph()
-        return candidate_predict_op_names(sess, num_classes, graph)
+        return candidate_predict_op_names(sess, num_classes, graph, feed_options)
 
     @staticmethod
     def overlay_gradcam(image, heatmap):

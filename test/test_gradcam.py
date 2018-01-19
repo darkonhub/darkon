@@ -101,6 +101,8 @@ class TestGradcam(unittest.TestCase):
         self.graph_origin = tf.get_default_graph()
         self.target_op_name = darkon.Gradcam.candidate_featuremap_op_names(sess, self.graph_origin)[-1]
         self.model_name = 'resnet'
+        
+        self.assertEqual('resnet_v1_50/block4/unit_3/bottleneck_v1/Relu', self.target_op_name) 
 
     def test_vgg(self):
         with slim.arg_scope(vgg.vgg_arg_scope()):
@@ -116,3 +118,4 @@ class TestGradcam(unittest.TestCase):
         self.graph_origin = tf.get_default_graph()
         self.target_op_name = darkon.Gradcam.candidate_featuremap_op_names(sess, self.graph_origin)[-2]
         self.model_name = 'vgg'
+        self.assertEqual('vgg_16/conv5/conv5_3/Relu', self.target_op_name)
