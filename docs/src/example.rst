@@ -27,11 +27,11 @@ ImageNet, ResNet
 
 - `Gradcam & Guided Gradcam for image`_
 
-Sentence polarity dataset, cnn text classification 
+Sentence polarity dataset, Text sentiment classification by CNN
 
-- `Heatmap for text`_
+- `Gradcam for text sentiment classification`_
 
 .. _`Gradcam & Guided Gradcam for image`: http://nbviewer.jupyter.org/github/darkonhub/darkon-examples/blob/master/gradcam/GradcamDemo.ipynb
 
-.. _`Heatmap for text`: http://nbviewer.jupyter.org/github/darkonhub/darkon-examples/blob/master/gradcam/GradcamDemoSequence.ipynb
+.. _`Gradcam for text sentiment classification`: http://nbviewer.jupyter.org/github/darkonhub/darkon-examples/blob/master/gradcam/GradcamDemoSequence.ipynb
 
