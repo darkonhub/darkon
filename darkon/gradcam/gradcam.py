@@ -155,7 +155,7 @@ class Gradcam:
             saliency_val = np.squeeze(saliency_val, axis=0)
         else:
             cam = skimage_resize(cam, (input_length, 1), preserve_range=True, mode='reflect')
-            cam = np.transpose(cam)
+            cam = np.reshape(cam, -1)
 
         cam = np.maximum(cam, 0)
         heatmap = cam / np.max(cam)

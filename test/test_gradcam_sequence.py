@@ -19,6 +19,7 @@ import tensorflow as tf
 import numpy as np
 from tensorflow.contrib import learn
 
+
 class TestGradcamSequence(unittest.TestCase):
     def setUp(self):
         tf.reset_default_graph()
@@ -30,24 +31,37 @@ class TestGradcamSequence(unittest.TestCase):
         
     def test_text(self):
         sess = tf.InteractiveSession()
-        checkpoint_file = "test/data/sequence/model-15000"
+        checkpoint_file = "test/data/sequence/model-30000"
         saver = tf.train.import_meta_graph("{}.meta".format(checkpoint_file))
         saver.restore(sess, checkpoint_file)
-        graph = tf.get_default_graph()   
+
+        graph = tf.get_default_graph()
         input_x = graph.get_operation_by_name("input_x").outputs[0]
         dropout_keep_prob = graph.get_operation_by_name("dropout_keep_prob").outputs[0]
         input_y = graph.get_operation_by_name("input_y").outputs[0]
+        pred = graph.get_operation_by_name("output/predictions").outputs[0]
 
-        conv_op_names = darkon.Gradcam.candidate_featuremap_op_names(sess, 
-            feed_options={input_x: self.x_test_batch, input_y: self.y_test_batch ,dropout_keep_prob:1.0})
+        conv_op_names = darkon.Gradcam.candidate_featuremap_op_names(sess, feed_options={
+            input_x: self.x_test_batch, input_y: self.y_test_batch, dropout_keep_prob: 1.0})
                 
-        prob_op_names = darkon.Gradcam.candidate_predict_op_names(sess, 2, 
-            feed_options={input_x: self.x_test_batch, input_y: self.y_test_batch ,dropout_keep_prob:1.0})
+        prob_op_names = darkon.Gradcam.candidate_predict_op_names(sess, 2, feed_options={
+            input_x: self.x_test_batch, input_y: self.y_test_batch, dropout_keep_prob: 1.0})
         
-        conv_name = conv_op_names[-7]
+        conv_name = conv_op_names[-4]
         prob_name = prob_op_names[-1]
-        self.assertEqual(conv_name, "conv-maxpool-3/relu")
+        self.assertEqual(conv_name, "conv-maxpool-4/relu")
         self.assertEqual(prob_name, "output/scores")
             
         insp = darkon.Gradcam(input_x, 2, conv_name, prob_name, graph=graph)
         ret = insp.gradcam(sess, self.x_test_batch[0], feed_options={dropout_keep_prob: 1})
+        pred_val = sess.run(pred, feed_dict={input_x: self.x_test_batch, dropout_keep_prob: 1})[0]
+
+        self.assertEqual(pred_val, 1)
+        self.assertIn('heatmap', ret)
+        self.assertEqual(1, len(ret.keys()))
+
+        # print(', '.join(ret['heatmap'][0][:8].astype(str)))
+        expected = np.zeros(56)
+        expected[:8] = [0.12248552253947861, 1.0, 0.23472392896865743, 0.2552138999148481,
+                        0.0596502180423416, 0.0048125128424684315, 0.0043455777121338785, 0.0]
+        self.assertTrue(np.allclose(expected, ret['heatmap']))
